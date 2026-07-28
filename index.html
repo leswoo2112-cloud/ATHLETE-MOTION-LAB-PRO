@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+    <title>설천고 스포츠과학 훈련센터</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <script defer src="sports.js"></script>
+    <script defer src="weight.js"></script>
+    <script defer src="records.js"></script>
+    <script defer src="pose.js"></script>
+    <script defer src="report.js"></script>
+    <script defer src="app.js"></script>
+
+</head>
+
+<body>
+
+<div class="sidebar">
+
+    <div class="logo">
+
+        <h1>SSC</h1>
+
+        <p>Sports Science Center</p>
+
+    </div>
+
+    <button class="menu active"
+        data-page="dashboard">
+        🏠 대시보드
+    </button>
+
+    <button class="menu"
+        data-page="sport">
+        🏀 종목 분석
+    </button>
+
+    <button class="menu"
+        data-page="weight">
+        🏋️ 웨이트
+    </button>
+
+    <button class="menu"
+        data-page="camera">
+        📹 AI 카메라
+    </button>
+
+    <button class="menu"
+        data-page="record">
+        📊 기록
+    </button>
+
+    <button class="menu"
+        data-page="report">
+        📄 보고서
+    </button>
+
+</div>
+
+<div class="main">
+
+<header>
+
+<h1>
+
+설천고 스포츠과학 훈련센터
+
+</h1>
+
+<div>
+
+<select id="athlete">
+
+</select>
+
+<button id="addAthlete">
+
+선수등록
+
+</button>
+
+</div>
+
+</header>
+
+<!-- ====================== -->
+
+<section id="dashboard">
+
+<div class="card">
+
+<h2>
+
+오늘의 훈련
+
+</h2>
+
+<div id="todayTraining">
+
+</div>
+
+</div>
+
+<div class="card">
+
+<h2>
+
+최근 평균점수
+
+</h2>
+
+<h1 id="averageScore">
+
+0
+
+</h1>
+
+</div>
+
+<div class="card">
+
+<h2>
+
+최근 AI 피드백
+
+</h2>
+
+<div id="coachMessage">
+
+측정을 시작해주세요.
+
+</div>
+
+</div>
+
+<div class="card">
+
+<h2>
+
+변화 그래프
+
+</h2>
+
+<canvas id="dashboardChart">
+
+</canvas>
+
+</div>
+
+</section>
+
+<!-- ====================== -->
+
+<section id="sport"
+class="hidden">
+
+<h2>
+
+종목 분석
+
+</h2>
+
+<div class="sportGrid">
+
+<button class="sportBtn">
+
+🏀 농구
+
+</button>
+
+<button class="sportBtn">
+
+⚽ 축구
+
+</button>
+
+<button class="sportBtn">
+
+⚾ 야구
+
+</button>
+
+<button class="sportBtn">
+
+🎿 바이애슬론
+
+</button>
+
+</div>
+<div class="skillArea">
+
+<h3>
+
+기술 선택
+
+</h3>
+
+<div id="skillList">
+
+<button class="skillBtn">
+
+점프슛
+
+</button>
+
+<button class="skillBtn">
+
+레이업
+
+</button>
+
+<button class="skillBtn">
+
+드리블
+
+</button>
+
+<button class="skillBtn">
+
+스텝
+
+</button>
+
+</div>
+
+<div class="analysisBox">
+
+<h3>
+
+AI 분석 결과
+
+</h3>
+
+<div id="sportResult">
+
+종목과 기술을 선택해주세요.
+
+</div>
+
+<button id="startSport">
+
+분석 시작
+
+</button>
+
+</div>
+
+</section>
+
+<!-- ====================== -->
+
+<section id="weight"
+class="hidden">
+
+<h2>
+
+웨이트 분석
+
+</h2>
+
+<select id="weightCategory">
+
+<option>
+
+하체
+
+</option>
+
+<option>
+
+상체
+
+</option>
+
+<option>
+
+코어
+
+</option>
+
+</select>
+
+<div id="exerciseList">
+
+<button class="exerciseBtn">
+
+스쿼트
+
+</button>
+
+<button class="exerciseBtn">
+
+프론트 스쿼트
+
+</button>
+
+<button class="exerciseBtn">
+
+불가리안 스플릿 스쿼트
+
+</button>
+
+<button class="exerciseBtn">
+
+런지
+
+</button>
+
+<button class="exerciseBtn">
+
+데드리프트
+
+</button>
+
+<button class="exerciseBtn">
+
+루마니안 데드리프트
+
+</button>
+
+<button class="exerciseBtn">
+
+힙 쓰러스트
+
+</button>
+
+<button class="exerciseBtn">
+
+카프 레이즈
+
+</button>
+
+</div>
+
+<div class="weightInput">
+
+<input
+type="number"
+id="kg"
+placeholder="중량(kg)">
+
+<input
+type="number"
+id="set"
+placeholder="세트">
+
+<input
+type="number"
+id="rep"
+placeholder="횟수">
+
+<button id="startWeight">
+
+웨이트 분석 시작
+
+</button>
+
+</div>
+
+<div id="weightResult">
+
+운동을 선택해주세요.
+
+</div>
+
+</section>
+
+<!-- ====================== -->
+
+<section id="camera"
+class="hidden">
+
+<h2>
+
+AI 카메라 분석
+
+</h2>
+
+<div class="cameraBox">
+
+<video
+id="video"
+autoplay
+playsinline>
+
+</video>
+
+<canvas
+id="canvas">
+
+</canvas>
+
+</div>
+
+<div class="cameraButtons">
+
+<button id="cameraStart">
+
+카메라 시작
+
+</button>
+
+<button id="cameraStop">
+
+카메라 종료
+
+</button>
+
+<button id="capture">
+
+자세 측정
+
+</button>
+
+<button id="record">
+
+영상 녹화
+
+</button>
+
+</div>
+
+<div id="liveFeedback">
+
+AI가 자세를 분석합니다.
+
+</div>
+
+</section>
