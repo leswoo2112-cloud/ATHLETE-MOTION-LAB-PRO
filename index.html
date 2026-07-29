@@ -1,0 +1,2316 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
+
+  <title>
+    설천고 스포츠과학 훈련센터
+  </title>
+
+  <link
+    rel="stylesheet"
+    href="style.css"
+  />
+</head>
+
+<body>
+
+  <!-- ======================================
+       전체 앱
+  ======================================= -->
+
+  <div class="app-shell">
+
+    <!-- ======================================
+         왼쪽 사이드바
+    ======================================= -->
+
+    <aside class="sidebar">
+
+      <div class="school-brand">
+
+        <div class="school-logo">
+          설천고
+        </div>
+
+        <div class="school-name">
+          <h1>설천고등학교</h1>
+
+          <p>
+            스포츠과학 훈련센터
+          </p>
+        </div>
+
+      </div>
+
+
+      <!-- ======================================
+           메뉴
+      ======================================= -->
+
+      <nav class="side-menu">
+
+        <button
+          class="menu-button active"
+          data-page="dashboardPage"
+        >
+          <span class="menu-icon">
+            🏠
+          </span>
+
+          <span>
+            대시보드
+          </span>
+        </button>
+
+
+        <button
+          class="menu-button"
+          data-page="athletePage"
+        >
+          <span class="menu-icon">
+            👤
+          </span>
+
+          <span>
+            선수 관리
+          </span>
+        </button>
+
+
+        <button
+          class="menu-button"
+          data-page="sportsPage"
+        >
+          <span class="menu-icon">
+            🏃
+          </span>
+
+          <span>
+            종목 훈련
+          </span>
+        </button>
+
+
+        <button
+          class="menu-button"
+          data-page="weightPage"
+        >
+          <span class="menu-icon">
+            🏋️
+          </span>
+
+          <span>
+            웨이트 훈련
+          </span>
+        </button>
+
+
+        <button
+          class="menu-button"
+          data-page="recordsPage"
+        >
+          <span class="menu-icon">
+            📋
+          </span>
+
+          <span>
+            기록 보기
+          </span>
+        </button>
+
+
+        <button
+          class="menu-button"
+          data-page="reportPage"
+        >
+          <span class="menu-icon">
+            📊
+          </span>
+
+          <span>
+            분석 보고서
+          </span>
+        </button>
+
+
+        <button
+          class="menu-button"
+          data-page="cameraPage"
+        >
+          <span class="menu-icon">
+            📷
+          </span>
+
+          <span>
+            AI 카메라
+          </span>
+        </button>
+
+      </nav>
+
+
+      <!-- ======================================
+           사이드바 아래
+      ======================================= -->
+
+      <div class="sidebar-bottom">
+
+        <button
+          class="menu-button"
+          data-page="settingsPage"
+        >
+          <span class="menu-icon">
+            ⚙️
+          </span>
+
+          <span>
+            설정
+          </span>
+        </button>
+
+      </div>
+
+    </aside>
+
+
+    <!-- ======================================
+         메인 영역
+    ======================================= -->
+
+    <main class="main-content">
+
+      <!-- ======================================
+           상단 헤더
+      ======================================= -->
+
+      <header class="top-header">
+
+        <div>
+
+          <p class="header-small-text">
+            SEOLCHEON SPORTS SCIENCE CENTER
+          </p>
+
+          <h2 id="pageTitle">
+            대시보드
+          </h2>
+
+        </div>
+
+
+        <div class="header-actions">
+
+          <div class="selected-athlete-box">
+
+            <span class="selected-label">
+              현재 선수
+            </span>
+
+            <strong id="currentAthleteName">
+              선택 안 됨
+            </strong>
+
+          </div>
+
+
+          <button
+            id="mobileMenuButton"
+            class="mobile-menu-button"
+            type="button"
+          >
+            ☰
+          </button>
+
+        </div>
+
+      </header>
+
+
+      <!-- ======================================
+           페이지 영역
+      ======================================= -->
+
+      <section class="page-wrapper">
+
+        <!-- ======================================
+             대시보드 페이지
+        ======================================= -->
+
+        <section
+          id="dashboardPage"
+          class="app-page active-page"
+        >
+
+          <div class="hero-section">
+
+            <div class="hero-text">
+
+              <p class="hero-subtitle">
+                SCIENCE · TRAINING · PERFORMANCE
+              </p>
+
+              <h3>
+                설천고등학교
+                <br />
+                스포츠과학 훈련센터
+              </h3>
+
+              <p class="hero-description">
+                선수 기록을 체계적으로 관리하고
+                훈련 성과를 분석하세요.
+              </p>
+
+
+              <div class="hero-buttons">
+
+                <button
+                  class="primary-button"
+                  data-move-page="athletePage"
+                >
+                  선수 등록
+                </button>
+
+                <button
+                  class="secondary-button"
+                  data-move-page="sportsPage"
+                >
+                  훈련 시작
+                </button>
+
+              </div>
+
+            </div>
+
+
+            <div class="hero-visual">
+
+              <div class="hero-circle"></div>
+
+              <div class="hero-school-mark">
+                설천고
+              </div>
+
+              <div class="hero-line line-one"></div>
+              <div class="hero-line line-two"></div>
+              <div class="hero-line line-three"></div>
+
+            </div>
+
+          </div>
+
+
+          <!-- ======================================
+               요약 카드
+          ======================================= -->
+
+          <div class="summary-grid">
+
+            <article class="summary-card">
+
+              <div class="summary-icon blue">
+                👥
+              </div>
+
+              <div>
+
+                <p>
+                  전체 선수
+                </p>
+
+                <strong id="totalAthletes">
+                  0
+                </strong>
+
+                <span>
+                  명
+                </span>
+
+              </div>
+
+            </article>
+
+
+            <article class="summary-card">
+
+              <div class="summary-icon green">
+                📅
+              </div>
+
+              <div>
+
+                <p>
+                  오늘 훈련
+                </p>
+
+                <strong id="todayTrainingCount">
+                  0
+                </strong>
+
+                <span>
+                  건
+                </span>
+
+              </div>
+
+            </article>
+
+
+            <article class="summary-card">
+
+              <div class="summary-icon yellow">
+                🎯
+              </div>
+
+              <div>
+
+                <p>
+                  평균 점수
+                </p>
+
+                <strong id="averageScore">
+                  0
+                </strong>
+
+                <span>
+                  점
+                </span>
+
+              </div>
+
+            </article>
+
+
+            <article class="summary-card">
+
+              <div class="summary-icon purple">
+                📄
+              </div>
+
+              <div>
+
+                <p>
+                  전체 기록
+                </p>
+
+                <strong id="totalRecords">
+                  0
+                </strong>
+
+                <span>
+                  건
+                </span>
+
+              </div>
+
+            </article>
+
+          </div>
+                  <!-- ======================================
+               최근 훈련 / 주간 현황
+          ======================================= -->
+
+          <div class="dashboard-grid">
+
+            <!-- 최근 훈련 -->
+
+            <div class="dashboard-card">
+
+              <div class="card-header">
+
+                <h3>최근 훈련 기록</h3>
+
+                <button class="card-more">
+                  →
+                </button>
+
+              </div>
+
+              <div
+                id="recentTrainingList"
+                class="empty-box"
+              >
+
+                <div class="empty-icon">
+                  📋
+                </div>
+
+                <p>
+                  아직 저장된 훈련이 없습니다.
+                </p>
+
+              </div>
+
+            </div>
+
+
+            <!-- 주간 현황 -->
+
+            <div class="dashboard-card">
+
+              <div class="card-header">
+
+                <h3>훈련 현황</h3>
+
+              </div>
+
+              <div class="progress-box">
+
+                <div class="circle-progress">
+
+                  <div
+                    id="weekPercent"
+                    class="circle-number"
+                  >
+                    0%
+                  </div>
+
+                </div>
+
+                <div class="progress-info">
+
+                  <h4>
+                    이번 주 목표
+                  </h4>
+
+                  <p>
+                    목표 대비 진행률
+                  </p>
+
+                  <div class="progress-bar">
+
+                    <div
+                      id="progressFill"
+                      class="progress-fill"
+                    ></div>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </section>
+
+
+        <!-- ======================================
+             선수 관리
+        ======================================= -->
+
+        <section
+          id="athletePage"
+          class="app-page"
+        >
+
+          <div class="page-title">
+
+            <h2>
+              선수 관리
+            </h2>
+
+            <p>
+              선수 등록 및 선택
+            </p>
+
+          </div>
+
+
+          <div class="form-card">
+
+            <div class="form-grid">
+
+              <div>
+
+                <label>
+                  선수 이름
+                </label>
+
+                <input
+                  id="athleteNameInput"
+                  type="text"
+                  placeholder="이름 입력"
+                />
+
+              </div>
+
+
+              <div>
+
+                <label>
+                  학년
+                </label>
+
+                <select id="athleteGrade">
+
+                  <option>
+                    1학년
+                  </option>
+
+                  <option>
+                    2학년
+                  </option>
+
+                  <option>
+                    3학년
+                  </option>
+
+                </select>
+
+              </div>
+
+
+              <div>
+
+                <label>
+                  종목
+                </label>
+
+                <select id="athleteSport">
+
+                  <option>
+                    바이애슬론
+                  </option>
+
+                  <option>
+                    농구
+                  </option>
+
+                  <option>
+                    육상
+                  </option>
+
+                  <option>
+                    기타
+                  </option>
+
+                </select>
+
+              </div>
+
+            </div>
+
+
+            <button
+              id="addAthleteButton"
+              class="primary-button"
+            >
+
+              선수 등록
+
+            </button>
+
+          </div>
+
+
+          <!-- 선수 목록 -->
+
+          <div
+            id="athleteList"
+            class="athlete-list"
+          >
+
+          </div>
+
+        </section>
+                <!-- ======================================
+             종목 훈련
+        ======================================= -->
+
+        <section
+          id="sportsPage"
+          class="app-page"
+        >
+
+          <div class="page-title">
+
+            <h2>
+              종목 훈련
+            </h2>
+
+            <p>
+              종목별 훈련 기록 저장
+            </p>
+
+          </div>
+
+
+          <div class="form-card">
+
+            <div class="form-grid">
+
+              <div>
+
+                <label>
+                  선수
+                </label>
+
+                <select id="sportsAthleteSelect">
+
+                  <option value="">
+                    선수를 선택하세요
+                  </option>
+
+                </select>
+
+              </div>
+
+
+              <div>
+
+                <label>
+                  종목
+                </label>
+
+                <select id="sportsTypeSelect">
+
+                  <option value="바이애슬론">
+                    바이애슬론
+                  </option>
+
+                  <option value="농구">
+                    농구
+                  </option>
+
+                  <option value="육상">
+                    육상
+                  </option>
+
+                  <option value="기타">
+                    기타
+                  </option>
+
+                </select>
+
+              </div>
+
+
+              <div>
+
+                <label>
+                  훈련 종류
+                </label>
+
+                <select id="sportsTrainingType">
+
+                  <option value="기술 훈련">
+                    기술 훈련
+                  </option>
+
+                  <option value="체력 훈련">
+                    체력 훈련
+                  </option>
+
+                  <option value="전술 훈련">
+                    전술 훈련
+                  </option>
+
+                  <option value="회복 훈련">
+                    회복 훈련
+                  </option>
+
+                </select>
+
+              </div>
+
+
+              <div>
+
+                <label>
+                  훈련 날짜
+                </label>
+
+                <input
+                  id="sportsDateInput"
+                  type="date"
+                />
+
+              </div>
+
+
+              <div>
+
+                <label>
+                  훈련 시간
+                </label>
+
+                <input
+                  id="sportsDurationInput"
+                  type="number"
+                  min="1"
+                  placeholder="분 단위"
+                />
+
+              </div>
+
+
+              <div>
+
+                <label>
+                  수행 점수
+                </label>
+
+                <input
+                  id="sportsScoreInput"
+                  type="number"
+                  min="0"
+                  max="100"
+                  placeholder="0~100점"
+                />
+
+              </div>
+
+            </div>
+
+
+            <div class="full-input">
+
+              <label>
+                세부 훈련 내용
+              </label>
+
+              <textarea
+                id="sportsMemoInput"
+                rows="5"
+                placeholder="훈련 내용과 특이사항을 입력하세요."
+              ></textarea>
+
+            </div>
+
+
+            <div class="button-row">
+
+              <button
+                id="saveSportsRecordButton"
+                class="primary-button"
+                type="button"
+              >
+                종목 훈련 저장
+              </button>
+
+              <button
+                id="resetSportsFormButton"
+                class="secondary-button"
+                type="button"
+              >
+                입력 초기화
+              </button>
+
+            </div>
+
+          </div>
+
+
+          <div class="dashboard-card">
+
+            <div class="card-header">
+
+              <h3>
+                종목 훈련 분석
+              </h3>
+
+            </div>
+
+            <div
+              id="sportsAnalysisResult"
+              class="analysis-box"
+            >
+
+              <p>
+                기록을 저장하면 분석 결과가 표시됩니다.
+              </p>
+
+            </div>
+
+          </div>
+
+        </section>
+
+
+        <!-- ======================================
+             웨이트 훈련
+        ======================================= -->
+
+        <section
+          id="weightPage"
+          class="app-page"
+        >
+
+          <div class="page-title">
+
+            <h2>
+              웨이트 훈련
+            </h2>
+
+            <p>
+              세트, 반복 수, 중량 기록
+            </p>
+
+          </div>
+
+
+          <div class="form-card">
+
+            <div class="form-grid">
+
+              <div>
+
+                <label>
+                  선수
+                </label>
+
+                <select id="weightAthleteSelect">
+
+                  <option value="">
+                    선수를 선택하세요
+                  </option>
+
+                </select>
+
+              </div>
+
+
+              <div>
+
+                <label>
+                  운동 종목
+                </label>
+
+                <select id="weightExerciseSelect">
+
+                  <option value="스쿼트">
+                    스쿼트
+                  </option>
+
+                  <option value="벤치프레스">
+                    벤치프레스
+                  </option>
+
+                  <option value="데드리프트">
+                    데드리프트
+                  </option>
+
+                  <option value="풀업">
+                    풀업
+                  </option>
+
+                  <option value="숄더프레스">
+                    숄더프레스
+                  </option>
+
+                  <option value="기타">
+                    기타
+                  </option>
+
+                </select>
+
+              </div>
+
+
+              <div>
+
+                <label>
+                  훈련 날짜
+                </label>
+
+                <input
+                  id="weightDateInput"
+                  type="date"
+                />
+
+              </div>
+
+
+              <div>
+
+                <label>
+                  중량
+                </label>
+
+                <input
+                  id="weightKgInput"
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  placeholder="kg"
+                />
+
+              </div>
+
+
+              <div>
+
+                <label>
+                  세트 수
+                </label>
+
+                <input
+                  id="weightSetInput"
+                  type="number"
+                  min="1"
+                  placeholder="세트"
+                />
+
+              </div>
+
+
+              <div>
+
+                <label>
+                  반복 수
+                </label>
+
+                <input
+                  id="weightRepInput"
+                  type="number"
+                  min="1"
+                  placeholder="회"
+                />
+
+              </div>
+
+            </div>
+
+
+            <div class="full-input">
+
+              <label>
+                훈련 메모
+              </label>
+
+              <textarea
+                id="weightMemoInput"
+                rows="5"
+                placeholder="컨디션이나 자세에 대한 메모를 입력하세요."
+              ></textarea>
+
+            </div>
+
+
+            <div class="estimate-card">
+
+              <p>
+                예상 1RM
+              </p>
+
+              <strong id="estimatedOneRepMax">
+                0 kg
+              </strong>
+
+            </div>
+
+
+            <div class="button-row">
+
+              <button
+                id="saveWeightRecordButton"
+                class="primary-button"
+                type="button"
+              >
+                웨이트 기록 저장
+              </button>
+
+              <button
+                id="resetWeightFormButton"
+                class="secondary-button"
+                type="button"
+              >
+                입력 초기화
+              </button>
+
+            </div>
+
+          </div>
+
+        </section>
+                <!-- ======================================
+             기록 보기
+        ======================================= -->
+
+        <section
+          id="recordsPage"
+          class="app-page"
+        >
+
+          <div class="page-title">
+
+            <h2>
+              기록 보기
+            </h2>
+
+            <p>
+              저장된 훈련 기록을 한눈에 확인
+            </p>
+
+          </div>
+
+
+          <div class="filter-card">
+
+            <div class="form-grid">
+
+              <div>
+
+                <label>
+                  선수
+                </label>
+
+                <select id="recordAthleteFilter">
+
+                  <option value="전체">
+                    전체 선수
+                  </option>
+
+                </select>
+
+              </div>
+
+
+              <div>
+
+                <label>
+                  기록 종류
+                </label>
+
+                <select id="recordTypeFilter">
+
+                  <option value="전체">
+                    전체 기록
+                  </option>
+
+                  <option value="종목훈련">
+                    종목 훈련
+                  </option>
+
+                  <option value="웨이트">
+                    웨이트 훈련
+                  </option>
+
+                </select>
+
+              </div>
+
+
+              <div>
+
+                <label>
+                  검색
+                </label>
+
+                <input
+                  id="recordSearchInput"
+                  type="search"
+                  placeholder="운동명, 메모 검색"
+                />
+
+              </div>
+
+            </div>
+
+
+            <div class="button-row">
+
+              <button
+                id="searchRecordsButton"
+                class="primary-button"
+                type="button"
+              >
+                기록 검색
+              </button>
+
+              <button
+                id="resetRecordFilterButton"
+                class="secondary-button"
+                type="button"
+              >
+                필터 초기화
+              </button>
+
+            </div>
+
+          </div>
+
+
+          <div class="dashboard-card">
+
+            <div class="card-header">
+
+              <div>
+
+                <h3>
+                  전체 훈련 기록
+                </h3>
+
+                <p
+                  id="recordCountText"
+                  class="card-description"
+                >
+                  총 0건
+                </p>
+
+              </div>
+
+
+              <button
+                id="exportRecordsButton"
+                class="small-action-button"
+                type="button"
+              >
+                기록 내보내기
+              </button>
+
+            </div>
+
+
+            <div
+              id="recordsList"
+              class="records-list"
+            >
+
+              <div class="empty-box">
+
+                <div class="empty-icon">
+                  📋
+                </div>
+
+                <p>
+                  저장된 기록이 없습니다.
+                </p>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </section>
+
+
+        <!-- ======================================
+             분석 보고서
+        ======================================= -->
+
+        <section
+          id="reportPage"
+          class="app-page"
+        >
+
+          <div class="page-title">
+
+            <h2>
+              분석 보고서
+            </h2>
+
+            <p>
+              선수별 훈련 결과와 변화 분석
+            </p>
+
+          </div>
+
+
+          <div class="filter-card">
+
+            <div class="form-grid">
+
+              <div>
+
+                <label>
+                  분석 선수
+                </label>
+
+                <select id="reportAthleteSelect">
+
+                  <option value="">
+                    선수를 선택하세요
+                  </option>
+
+                </select>
+
+              </div>
+
+
+              <div>
+
+                <label>
+                  분석 기간
+                </label>
+
+                <select id="reportPeriodSelect">
+
+                  <option value="7">
+                    최근 7일
+                  </option>
+
+                  <option value="30">
+                    최근 30일
+                  </option>
+
+                  <option value="90">
+                    최근 90일
+                  </option>
+
+                  <option value="all">
+                    전체 기간
+                  </option>
+
+                </select>
+
+              </div>
+
+            </div>
+
+
+            <div class="button-row">
+
+              <button
+                id="generateReportButton"
+                class="primary-button"
+                type="button"
+              >
+                보고서 생성
+              </button>
+
+              <button
+                id="printReportButton"
+                class="secondary-button"
+                type="button"
+              >
+                보고서 인쇄
+              </button>
+
+            </div>
+
+          </div>
+
+
+          <!-- 분석 요약 카드 -->
+
+          <div class="report-summary-grid">
+
+            <article class="report-summary-card">
+
+              <p>
+                총 훈련 횟수
+              </p>
+
+              <strong id="reportTotalTraining">
+                0
+              </strong>
+
+              <span>
+                회
+              </span>
+
+            </article>
+
+
+            <article class="report-summary-card">
+
+              <p>
+                평균 수행 점수
+              </p>
+
+              <strong id="reportAverageScore">
+                0
+              </strong>
+
+              <span>
+                점
+              </span>
+
+            </article>
+
+
+            <article class="report-summary-card">
+
+              <p>
+                최고 수행 점수
+              </p>
+
+              <strong id="reportBestScore">
+                0
+              </strong>
+
+              <span>
+                점
+              </span>
+
+            </article>
+
+
+            <article class="report-summary-card">
+
+              <p>
+                누적 훈련 시간
+              </p>
+
+              <strong id="reportTotalMinutes">
+                0
+              </strong>
+
+              <span>
+                분
+              </span>
+
+            </article>
+
+          </div>
+
+
+          <!-- 그래프 영역 -->
+
+          <div class="dashboard-grid">
+
+            <div class="dashboard-card">
+
+              <div class="card-header">
+
+                <h3>
+                  수행 점수 변화
+                </h3>
+
+              </div>
+
+              <div class="chart-container">
+
+                <canvas
+                  id="scoreChart"
+                ></canvas>
+
+              </div>
+
+            </div>
+
+
+            <div class="dashboard-card">
+
+              <div class="card-header">
+
+                <h3>
+                  훈련 종류 비율
+                </h3>
+
+              </div>
+
+              <div class="chart-container">
+
+                <canvas
+                  id="trainingTypeChart"
+                ></canvas>
+
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <!-- AI 분석 결과 -->
+
+          <div class="dashboard-card">
+
+            <div class="card-header">
+
+              <h3>
+                AI 훈련 분석
+              </h3>
+
+            </div>
+
+            <div
+              id="reportAnalysisText"
+              class="analysis-box"
+            >
+
+              <div class="empty-icon">
+                🤖
+              </div>
+
+              <p>
+                선수를 선택하고 보고서를 생성하세요.
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <!-- 최고 기록 -->
+
+          <div class="dashboard-card">
+
+            <div class="card-header">
+
+              <h3>
+                주요 기록
+              </h3>
+
+            </div>
+
+            <div
+              id="reportBestRecords"
+              class="best-record-list"
+            >
+
+              <div class="empty-box">
+
+                <p>
+                  분석할 기록이 없습니다.
+                </p>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </section>
+                <!-- ======================================
+             AI 카메라
+        ======================================= -->
+
+        <section
+          id="cameraPage"
+          class="app-page"
+        >
+
+          <div class="page-title">
+
+            <h2>
+              AI 카메라
+            </h2>
+
+            <p>
+              실시간 자세 촬영 및 동작 분석
+            </p>
+
+          </div>
+
+
+          <div class="camera-layout">
+
+            <!-- 카메라 화면 -->
+
+            <div class="camera-card">
+
+              <div class="card-header">
+
+                <div>
+
+                  <h3>
+                    실시간 카메라
+                  </h3>
+
+                  <p class="card-description">
+                    카메라 권한을 허용한 뒤 분석을 시작하세요.
+                  </p>
+
+                </div>
+
+
+                <span
+                  id="cameraStatusBadge"
+                  class="status-badge status-off"
+                >
+                  카메라 꺼짐
+                </span>
+
+              </div>
+
+
+              <div class="camera-screen">
+
+                <video
+                  id="cameraVideo"
+                  autoplay
+                  muted
+                  playsinline
+                ></video>
+
+
+                <canvas
+                  id="poseCanvas"
+                ></canvas>
+
+
+                <div
+                  id="cameraPlaceholder"
+                  class="camera-placeholder"
+                >
+
+                  <div class="camera-placeholder-icon">
+                    📷
+                  </div>
+
+                  <h4>
+                    카메라가 꺼져 있습니다.
+                  </h4>
+
+                  <p>
+                    아래의 카메라 시작 버튼을 눌러주세요.
+                  </p>
+
+                </div>
+
+              </div>
+
+
+              <div class="camera-control-row">
+
+                <button
+                  id="startCameraButton"
+                  class="primary-button"
+                  type="button"
+                >
+                  카메라 시작
+                </button>
+
+
+                <button
+                  id="stopCameraButton"
+                  class="secondary-button"
+                  type="button"
+                  disabled
+                >
+                  카메라 종료
+                </button>
+
+
+                <button
+                  id="capturePoseButton"
+                  class="secondary-button"
+                  type="button"
+                  disabled
+                >
+                  자세 캡처
+                </button>
+
+              </div>
+
+            </div>
+
+
+            <!-- 분석 설정 -->
+
+            <div class="camera-side-panel">
+
+              <div class="dashboard-card">
+
+                <div class="card-header">
+
+                  <h3>
+                    분석 설정
+                  </h3>
+
+                </div>
+
+
+                <div class="vertical-form">
+
+                  <div>
+
+                    <label>
+                      분석 선수
+                    </label>
+
+                    <select id="cameraAthleteSelect">
+
+                      <option value="">
+                        선수를 선택하세요
+                      </option>
+
+                    </select>
+
+                  </div>
+
+
+                  <div>
+
+                    <label>
+                      분석 동작
+                    </label>
+
+                    <select id="poseMovementSelect">
+
+                      <option value="스쿼트">
+                        스쿼트
+                      </option>
+
+                      <option value="런지">
+                        런지
+                      </option>
+
+                      <option value="점프">
+                        점프
+                      </option>
+
+                      <option value="달리기 자세">
+                        달리기 자세
+                      </option>
+
+                      <option value="사격 자세">
+                        사격 자세
+                      </option>
+
+                      <option value="기타">
+                        기타
+                      </option>
+
+                    </select>
+
+                  </div>
+
+
+                  <div>
+
+                    <label>
+                      촬영 방향
+                    </label>
+
+                    <select id="cameraDirectionSelect">
+
+                      <option value="전면">
+                        전면
+                      </option>
+
+                      <option value="측면">
+                        측면
+                      </option>
+
+                      <option value="후면">
+                        후면
+                      </option>
+
+                    </select>
+
+                  </div>
+
+
+                  <button
+                    id="startPoseAnalysisButton"
+                    class="primary-button full-width-button"
+                    type="button"
+                    disabled
+                  >
+                    자세 분석 시작
+                  </button>
+
+                </div>
+
+              </div>
+
+
+              <div class="dashboard-card">
+
+                <div class="card-header">
+
+                  <h3>
+                    실시간 분석
+                  </h3>
+
+                </div>
+
+
+                <div class="pose-score-box">
+
+                  <p>
+                    자세 점수
+                  </p>
+
+                  <strong id="poseScore">
+                    0
+                  </strong>
+
+                  <span>
+                    점
+                  </span>
+
+                </div>
+
+
+                <div
+                  id="poseFeedbackList"
+                  class="feedback-list"
+                >
+
+                  <div class="feedback-item neutral">
+
+                    <span>
+                      ●
+                    </span>
+
+                    <p>
+                      분석을 시작하면 피드백이 표시됩니다.
+                    </p>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <!-- 캡처 결과 -->
+
+          <div class="dashboard-card">
+
+            <div class="card-header">
+
+              <div>
+
+                <h3>
+                  자세 캡처 결과
+                </h3>
+
+                <p class="card-description">
+                  촬영된 자세와 분석 결과를 저장할 수 있습니다.
+                </p>
+
+              </div>
+
+            </div>
+
+
+            <div class="capture-result-grid">
+
+              <div class="capture-preview">
+
+                <canvas
+                  id="captureCanvas"
+                ></canvas>
+
+                <div
+                  id="captureEmptyMessage"
+                  class="empty-box"
+                >
+
+                  <div class="empty-icon">
+                    🖼️
+                  </div>
+
+                  <p>
+                    캡처된 이미지가 없습니다.
+                  </p>
+
+                </div>
+
+              </div>
+
+
+              <div class="capture-information">
+
+                <div class="capture-info-row">
+
+                  <span>
+                    선수
+                  </span>
+
+                  <strong id="captureAthleteName">
+                    선택 안 됨
+                  </strong>
+
+                </div>
+
+
+                <div class="capture-info-row">
+
+                  <span>
+                    동작
+                  </span>
+
+                  <strong id="captureMovementName">
+                    선택 안 됨
+                  </strong>
+
+                </div>
+
+
+                <div class="capture-info-row">
+
+                  <span>
+                    자세 점수
+                  </span>
+
+                  <strong id="capturePoseScore">
+                    0점
+                  </strong>
+
+                </div>
+
+
+                <div class="full-input">
+
+                  <label>
+                    코치 메모
+                  </label>
+
+                  <textarea
+                    id="captureMemoInput"
+                    rows="5"
+                    placeholder="자세 분석에 대한 메모를 입력하세요."
+                  ></textarea>
+
+                </div>
+
+
+                <button
+                  id="savePoseRecordButton"
+                  class="primary-button full-width-button"
+                  type="button"
+                  disabled
+                >
+                  자세 분석 기록 저장
+                </button>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </section>
+
+
+        <!-- ======================================
+             설정
+        ======================================= -->
+
+        <section
+          id="settingsPage"
+          class="app-page"
+        >
+
+          <div class="page-title">
+
+            <h2>
+              설정
+            </h2>
+
+            <p>
+              훈련센터 기본 정보와 데이터 관리
+            </p>
+
+          </div>
+
+
+          <div class="settings-grid">
+
+            <!-- 학교 정보 -->
+
+            <div class="form-card">
+
+              <div class="card-header">
+
+                <h3>
+                  기관 정보
+                </h3>
+
+              </div>
+
+
+              <div class="vertical-form">
+
+                <div>
+
+                  <label>
+                    학교명
+                  </label>
+
+                  <input
+                    id="schoolNameInput"
+                    type="text"
+                    value="설천고등학교"
+                  />
+
+                </div>
+
+
+                <div>
+
+                  <label>
+                    시스템 이름
+                  </label>
+
+                  <input
+                    id="systemNameInput"
+                    type="text"
+                    value="스포츠과학 훈련센터"
+                  />
+
+                </div>
+
+
+                <div>
+
+                  <label>
+                    담당 지도자
+                  </label>
+
+                  <input
+                    id="coachNameInput"
+                    type="text"
+                    placeholder="지도자 이름 입력"
+                  />
+
+                </div>
+
+
+                <div>
+
+                  <label>
+                    주간 훈련 목표
+                  </label>
+
+                  <input
+                    id="weeklyGoalInput"
+                    type="number"
+                    min="1"
+                    value="5"
+                  />
+
+                </div>
+
+
+                <button
+                  id="saveSettingsButton"
+                  class="primary-button"
+                  type="button"
+                >
+                  설정 저장
+                </button>
+
+              </div>
+
+            </div>
+
+
+            <!-- 데이터 관리 -->
+
+            <div class="form-card">
+
+              <div class="card-header">
+
+                <h3>
+                  데이터 관리
+                </h3>
+
+              </div>
+
+
+              <div class="settings-action-list">
+
+                <div class="settings-action-item">
+
+                  <div>
+
+                    <h4>
+                      전체 데이터 백업
+                    </h4>
+
+                    <p>
+                      선수와 훈련 기록을 JSON 파일로 저장합니다.
+                    </p>
+
+                  </div>
+
+                  <button
+                    id="backupDataButton"
+                    class="secondary-button"
+                    type="button"
+                  >
+                    백업
+                  </button>
+
+                </div>
+
+
+                <div class="settings-action-item">
+
+                  <div>
+
+                    <h4>
+                      데이터 불러오기
+                    </h4>
+
+                    <p>
+                      이전에 백업한 JSON 파일을 불러옵니다.
+                    </p>
+
+                  </div>
+
+                  <label
+                    for="restoreDataInput"
+                    class="secondary-button file-label-button"
+                  >
+                    불러오기
+                  </label>
+
+                  <input
+                    id="restoreDataInput"
+                    type="file"
+                    accept=".json,application/json"
+                    hidden
+                  />
+
+                </div>
+
+
+                <div class="settings-action-item danger-area">
+
+                  <div>
+
+                    <h4>
+                      전체 데이터 초기화
+                    </h4>
+
+                    <p>
+                      저장된 선수와 훈련 기록을 모두 삭제합니다.
+                    </p>
+
+                  </div>
+
+                  <button
+                    id="resetAllDataButton"
+                    class="danger-button"
+                    type="button"
+                  >
+                    전체 초기화
+                  </button>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <div class="dashboard-card">
+
+            <div class="card-header">
+
+              <h3>
+                시스템 정보
+              </h3>
+
+            </div>
+
+
+            <div class="system-information">
+
+              <div>
+
+                <span>
+                  시스템 버전
+                </span>
+
+                <strong>
+                  v2.0
+                </strong>
+
+              </div>
+
+
+              <div>
+
+                <span>
+                  데이터 저장 방식
+                </span>
+
+                <strong>
+                  브라우저 LocalStorage
+                </strong>
+
+              </div>
+
+
+              <div>
+
+                <span>
+                  최적화 환경
+                </span>
+
+                <strong>
+                  iPad · Safari · GitHub Pages
+                </strong>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </section>
+          </section>
+
+    </main>
+
+  </div>
+
+
+  <!-- ======================================
+       모바일 사이드바 배경
+  ======================================= -->
+
+  <div
+    id="sidebarOverlay"
+    class="sidebar-overlay"
+  ></div>
+
+
+  <!-- ======================================
+       공통 알림 메시지
+  ======================================= -->
+
+  <div
+    id="toastMessage"
+    class="toast-message"
+    role="status"
+    aria-live="polite"
+  >
+    저장되었습니다.
+  </div>
+
+
+  <!-- ======================================
+       확인 모달
+  ======================================= -->
+
+  <div
+    id="confirmModal"
+    class="modal-overlay"
+    aria-hidden="true"
+  >
+
+    <div class="modal-card">
+
+      <div class="modal-icon">
+        ⚠️
+      </div>
+
+      <h3 id="confirmModalTitle">
+        확인이 필요합니다
+      </h3>
+
+      <p id="confirmModalMessage">
+        정말 진행하시겠습니까?
+      </p>
+
+      <div class="modal-button-row">
+
+        <button
+          id="confirmModalCancelButton"
+          class="secondary-button"
+          type="button"
+        >
+          취소
+        </button>
+
+        <button
+          id="confirmModalConfirmButton"
+          class="danger-button"
+          type="button"
+        >
+          확인
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- ======================================
+       이미지 확대 모달
+  ======================================= -->
+
+  <div
+    id="imagePreviewModal"
+    class="modal-overlay image-modal"
+    aria-hidden="true"
+  >
+
+    <div class="image-preview-card">
+
+      <button
+        id="closeImagePreviewButton"
+        class="image-close-button"
+        type="button"
+        aria-label="이미지 닫기"
+      >
+        ×
+      </button>
+
+      <img
+        id="previewImage"
+        src=""
+        alt="자세 분석 캡처 이미지"
+      />
+
+    </div>
+
+  </div>
+
+
+  <!-- ======================================
+       Chart.js
+  ======================================= -->
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/chart.js"
+  ></script>
+
+
+  <!-- ======================================
+       MediaPipe 자세 분석 라이브러리
+  ======================================= -->
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"
+    crossorigin="anonymous"
+  ></script>
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"
+    crossorigin="anonymous"
+  ></script>
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js"
+    crossorigin="anonymous"
+  ></script>
+
+
+  <!-- ======================================
+       프로젝트 JavaScript
+       순서를 바꾸지 마세요.
+  ======================================= -->
+
+  <script src="app.js"></script>
+
+  <script src="sports.js"></script>
+
+  <script src="weight.js"></script>
+
+  <script src="pose.js"></script>
+
+  <script src="records.js"></script>
+
+  <script src="report.js"></script>
+
+</body>
+</html>    
