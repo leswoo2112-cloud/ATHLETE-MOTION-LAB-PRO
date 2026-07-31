@@ -667,3 +667,242 @@ function generateAnalysis(score){
     return "기본 자세부터 다시 연습하는 것을 권장합니다.";
 
 }
+/* ============================================================
+   CSV 다운로드
+============================================================ */
+
+function exportPoseCSV() {
+
+    if (poseRecords.length === 0) {
+        alert("저장된 기록이 없습니다.");
+        return;
+    }
+
+    let csv = "선수명,운동종목,점수,메모,날짜\n";
+
+    poseRecords.forEach(record => {
+
+        csv += `"${record.athlete}",`;
+        csv += `"${record.movement}",`;
+        csv += `"${record.score}",`;
+        csv += `"${record.memo}",`;
+        csv += `"${record.date}"\n`;
+
+    });
+
+    const blob = new Blob([csv], {
+        type: "text/csv;charset=utf-8;"
+    });
+
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+
+    a.href = url;
+    a.download = "pose_records.csv";
+
+    document.body.appendChild(a);
+
+    a.click();
+
+    document.body.removeChild(a);
+
+    URL.revokeObjectURL(url);
+
+}
+
+/* ============================================================
+   날짜 정렬
+============================================================ */
+
+function sortPoseNewest() {
+
+    poseRecords.sort((a, b) => b.id - a.id);
+
+    renderPoseTable();
+
+}
+
+function sortPoseOldest() {
+
+    poseRecords.sort((a, b) => a.id - b.id);
+
+    renderPoseTable();
+
+}
+
+/* ============================================================
+   최고 점수 강조
+============================================================ */
+
+function highlightBestRecord() {
+
+    if (poseRecords.length === 0) return;
+
+    const best = Math.max(...poseRecords.map(r => r.score));
+
+    const rows = document.querySelectorAll("#poseTableBody tr");
+
+    rows.forEach((row, index) => {
+
+        row.classList.remove("best-score");
+
+        if (poseRecords[index].score === best) {
+
+            row.classList.add("best-score");
+
+        }
+
+    });
+
+}
+
+/* ============================================================
+   AI 리포트 생성
+============================================================ */
+
+function createPoseReport(record) {
+
+    let level = "";
+
+    if (record.score >= 95) {
+
+        level = "A+";
+
+    } else if (record.score >= 90) {
+
+        level = "A";
+
+    } else if (record.score >= 80) {
+
+        level = "B";
+
+    } else if (record.score >= 70) {
+
+        level = "C";
+
+    } else {
+
+        level = "D";
+
+    }
+
+    return `
+=========================
+설천고 스포츠과학 훈련센터
+
+자세 분석 리포트
+=========================
+
+선수 : ${record.athlete}
+
+종목 : ${record.movement}
+
+점수 : ${record.score}점
+
+등급 : ${level}
+
+AI 분석
+
+${generateAnalysis(record.score)}
+
+메모
+
+${record.memo}
+
+분석일
+
+${record.date}
+
+=========================
+`;
+
+}
+
+/* ============================================================
+   리포트 다운로드
+============================================================ */
+
+function downloadPoseReport(id){
+
+    const record = poseRecords.find(r=>r.id===id);
+
+    if(!record) return;
+
+    const text = createPoseReport(record);
+
+    const blob = new Blob([text],{
+
+        type:"text/plain"
+
+    });
+
+    const url = URL.createObjectURL(blob);
+
+    const a=document.createElement("a");
+
+    a.href=url;
+
+    a.download=`${record.athlete}_Pose_Report.txt`;
+
+    document.body.appendChild(a);
+
+    a.click();
+
+    document.body.removeChild(a);
+
+    URL.revokeObjectURL(url);
+
+}
+
+/* ============================================================
+   검색 이벤트
+============================================================ */
+
+const searchInput = document.getElementById("poseSearchInput");
+
+if(searchInput){
+
+    searchInput.addEventListener("keyup",(e)=>{
+
+        searchPose(e.target.value);
+
+    });
+
+}
+
+/* ============================================================
+   필터 이벤트
+============================================================ */
+
+const filterSelect=document.getElementById("poseFilter");
+
+if(filterSelect){
+
+    filterSelect.addEventListener("change",(e)=>{
+
+        filterMovement(e.target.value);
+
+    });
+
+}
+
+/* ============================================================
+   페이지 최초 실행
+============================================================ */
+
+loadPoseRecords();
+
+renderPoseTable();
+
+initializeChart();
+
+updateChart();
+
+updateStatistics();
+
+highlightBestRecord();
+
+/* ============================================================
+   End of pose.js
+============================================================ */
