@@ -1,665 +1,885 @@
 "use strict";
 
-/* ======================================================
+/* ==========================================================
    report.js
    설천고 스포츠과학 훈련센터
-   Report Manager
-====================================================== */
+========================================================== */
 
-const ReportModule = (() => {
+const ReportModule = (()=>{
 
-/* ======================================================
-   State
-====================================================== */
+const state={
 
-const state = {
+    athlete:"",
 
-    records: [],
+    period:7,
 
-    filtered: [],
-
-    athlete: "all",
-
-    sport: "all",
-
-    period: "month",
-
-    startDate: "",
-
-    endDate: "",
-
-    charts: {}
+    records:[]
 
 };
 
-/* ======================================================
-   DOM
-====================================================== */
+const DOM={};
 
-const DOM = {};
+/* ==========================================================
+   DOM
+========================================================== */
 
 function cacheDOM(){
 
-    DOM.container=document.querySelector("#reportContainer");
+    DOM.athlete=document.getElementById("reportAthleteSelect");
 
-    DOM.athlete=document.querySelector("#reportAthlete");
+    DOM.period=document.getElementById("reportPeriodSelect");
 
-    DOM.sport=document.querySelector("#reportSport");
+    DOM.generate=document.getElementById("generateReportButton");
 
-    DOM.period=document.querySelector("#reportPeriod");
+    DOM.print=document.getElementById("printReportButton");
 
-    DOM.start=document.querySelector("#reportStartDate");
+    DOM.total=document.getElementById("reportTotalTraining");
 
-    DOM.end=document.querySelector("#reportEndDate");
+    DOM.average=document.getElementById("reportAverageScore");
 
-    DOM.summary=document.querySelector("#reportSummary");
+    DOM.best=document.getElementById("reportBestScore");
 
-    DOM.chart=document.querySelector("#reportChart");
+    DOM.minutes=document.getElementById("reportTotalMinutes");
+
+    DOM.analysis=document.getElementById("reportAnalysisText");
+
+    DOM.bestList=document.getElementById("reportBestRecords");
 
 }
 
-/* ======================================================
-   Load
-====================================================== */
+/* ==========================================================
+   Load Records
+========================================================== */
 
-function loadData(){
+function loadRecords(){
+
+    state.records=[];
 
     if(window.appData){
 
-        state.records=[
-            ...(appData.sportsRecords||[])
-        ];
+        (appData.sportsRecords||[]).forEach(record=>{
 
-    }else{
+            state.records.push({
 
-        state.records=[];
+                type:"sports",
+
+                ...record
+
+            });
+
+        });
+
+        (appData.weightRecords||[]).forEach(record=>{
+
+            state.records.push({
+
+                type:"weight",
+
+                ...record
+
+            });
+
+        });
+
+        (appData.poseRecords||[]).forEach(record=>{
+
+            state.records.push({
+
+                type:"pose",
+
+                ...record
+
+            });
+
+        });
 
     }
 
 }
 
-/* ======================================================
-   Filter
-====================================================== */
+/* ==========================================================
+   Athlete Select
+========================================================== */
 
-function filterRecords(){
+function renderAthletes(){
+
+    if(!DOM.athlete){
+
+        return;
+
+    }
+
+    DOM.athlete.innerHTML=
+
+    `<option value="">전체 선수</option>`;
+
+    (window.appData?.athletes||[]).forEach(player=>{
+
+        DOM.athlete.innerHTML+=`
+
+<option value="${player.id}">
+
+${player.name}
+
+</option>
+
+`;
+
+    });
+
+}
+/* ==========================================================
+   Filter Records
+========================================================== */
+
+function getFilteredRecords(){
 
     let records=[...state.records];
 
-    if(state.athlete!=="all"){
+    if(state.athlete){
 
-        records=records.filter(
+        records=records.filter(record=>
 
-            record=>
-
-            record.athleteId===state.athlete
+            String(record.athleteId)===String(state.athlete)
 
         );
 
     }
 
-    if(state.sport!=="all"){
+    const days=Number(state.period);
 
-        records=records.filter(
+    const today=new Date();
 
-            record=>
+    const start=new Date();
 
-            record.sport===state.sport
+    start.setDate(today.getDate()-days);
 
-        );
+    records=records.filter(record=>{
 
-    }
+        if(!record.date){
 
-    if(state.startDate){
-
-        records=records.filter(
-
-            record=>
-
-            record.date>=state.startDate
-
-        );
-
-    }
-
-    if(state.endDate){
-
-        records=records.filter(
-
-            record=>
-
-            record.date<=state.endDate
-
-        );
-
-    }
-
-    state.filtered=records;
-
-}
-
-/* ======================================================
-   Refresh
-====================================================== */
-
-function refresh(){
-
-    filterRecords();
-
-    renderSummary();
-
-}
-/* ======================================================
-   Summary Statistics
-====================================================== */
-
-function calculateSummary(){
-
-    const summary={
-
-        totalTraining:0,
-
-        totalDistance:0,
-
-        totalTime:0,
-
-        averageDistance:0,
-
-        averageTime:0,
-
-        bestDistance:0,
-
-        bestTime:0
-
-    };
-
-    summary.totalTraining=state.filtered.length;
-
-    state.filtered.forEach(record=>{
-
-        const distance=
-
-            Number(record.distance)||0;
-
-        const time=
-
-            Number(record.time)||0;
-
-        summary.totalDistance+=distance;
-
-        summary.totalTime+=time;
-
-        if(distance>summary.bestDistance){
-
-            summary.bestDistance=distance;
+            return false;
 
         }
 
-        if(time>summary.bestTime){
+        return new Date(record.date)>=start;
 
-            summary.bestTime=time;
+    });
+
+    return records;
+
+}
+
+/* ==========================================================
+   Summary
+========================================================== */
+
+function calculateSummary(){
+
+    const records=getFilteredRecords();
+
+    let total=0;
+
+    let totalScore=0;
+
+    let scoreCount=0;
+
+    let bestScore=0;
+
+    let totalMinutes=0;
+
+    records.forEach(record=>{
+
+        total++;
+
+        if(record.score!==undefined){
+
+            totalScore+=Number(record.score)||0;
+
+            scoreCount++;
+
+            if(Number(record.score)>bestScore){
+
+                bestScore=Number(record.score);
+
+            }
+
+        }
+
+        if(record.duration){
+
+            totalMinutes+=Number(record.duration)||0;
 
         }
 
     });
 
-    if(summary.totalTraining>0){
+    return{
 
-        summary.averageDistance=
+        total,
 
-            (
+        average:
 
-                summary.totalDistance/
+            scoreCount===0
 
-                summary.totalTraining
+            ?0
 
-            ).toFixed(2);
+            :Math.round(
 
-        summary.averageTime=
+                totalScore/scoreCount
 
-            (
+            ),
 
-                summary.totalTime/
+        best:bestScore,
 
-                summary.totalTraining
+        minutes:totalMinutes,
 
-            ).toFixed(2);
+        records
 
-    }
-
-    return summary;
+    };
 
 }
 
-/* ======================================================
-   Summary Card
-====================================================== */
+/* ==========================================================
+   Render Summary
+========================================================== */
 
 function renderSummary(){
-
-    if(!DOM.summary){
-
-        return;
-
-    }
 
     const summary=
 
         calculateSummary();
 
-    DOM.summary.innerHTML=`
+    DOM.total.textContent=
 
-<div class="report-grid">
+        summary.total+"회";
 
-<div class="report-card">
+    DOM.average.textContent=
 
-<h3>훈련 횟수</h3>
+        summary.average+"점";
 
-<p>${summary.totalTraining}</p>
+    DOM.best.textContent=
 
-</div>
+        summary.best+"점";
 
-<div class="report-card">
+    DOM.minutes.textContent=
 
-<h3>총 거리</h3>
+        summary.minutes+"분";
 
-<p>${summary.totalDistance}</p>
+}
 
-</div>
+/* ==========================================================
+   Best Records
+========================================================== */
 
-<div class="report-card">
+function renderBestRecords(){
 
-<h3>총 시간</h3>
+    const summary=
 
-<p>${summary.totalTime}</p>
+        calculateSummary();
 
-</div>
+    DOM.bestList.innerHTML="";
 
-<div class="report-card">
+    if(summary.records.length===0){
 
-<h3>평균 거리</h3>
+        DOM.bestList.innerHTML=
 
-<p>${summary.averageDistance}</p>
+        "<li>기록이 없습니다.</li>";
 
-</div>
+        return;
 
-<div class="report-card">
+    }
 
-<h3>평균 시간</h3>
+    summary.records
 
-<p>${summary.averageTime}</p>
+        .sort(
 
-</div>
+            (a,b)=>
 
-<div class="report-card">
+            (Number(b.score)||0)-
 
-<h3>최고 거리</h3>
+            (Number(a.score)||0)
 
-<p>${summary.bestDistance}</p>
+        )
 
-</div>
+        .slice(0,5)
 
-<div class="report-card">
+        .forEach(record=>{
 
-<h3>최고 시간</h3>
+            DOM.bestList.innerHTML+=`
 
-<p>${summary.bestTime}</p>
+<li>
 
-</div>
+${record.date}
 
-</div>
+&nbsp;
+
+${record.athleteName}
+
+&nbsp;
+
+${record.score||0}점
+
+</li>
+
+`;
+
+        });
+
+}
+/* ==========================================================
+   Score Chart
+========================================================== */
+
+let scoreChart=null;
+let trainingTypeChart=null;
+
+function renderScoreChart(){
+
+    const canvas=document.getElementById("scoreChart");
+
+    if(!canvas){
+
+        return;
+
+    }
+
+    const records=getFilteredRecords();
+
+    const labels=records.map(record=>record.date);
+
+    const scores=records.map(record=>
+
+        Number(record.score)||0
+
+    );
+
+    if(scoreChart){
+
+        scoreChart.destroy();
+
+    }
+
+    scoreChart=new Chart(canvas,{
+
+        type:"line",
+
+        data:{
+
+            labels,
+
+            datasets:[{
+
+                label:"훈련 점수",
+
+                data:scores,
+
+                borderWidth:3,
+
+                tension:0.35,
+
+                fill:false
+
+            }]
+
+        },
+
+        options:{
+
+            responsive:true,
+
+            maintainAspectRatio:false
+
+        }
+
+    });
+
+}
+
+/* ==========================================================
+   Training Type Chart
+========================================================== */
+
+function renderTrainingTypeChart(){
+
+    const canvas=document.getElementById(
+
+        "trainingTypeChart"
+
+    );
+
+    if(!canvas){
+
+        return;
+
+    }
+
+    const map={};
+
+    getFilteredRecords().forEach(record=>{
+
+        let name="기타";
+
+        switch(record.type){
+
+            case "sports":
+
+                name="종목훈련";
+
+                break;
+
+            case "weight":
+
+                name="웨이트";
+
+                break;
+
+            case "pose":
+
+                name="자세분석";
+
+                break;
+
+        }
+
+        map[name]=(map[name]||0)+1;
+
+    });
+
+    if(trainingTypeChart){
+
+        trainingTypeChart.destroy();
+
+    }
+
+    trainingTypeChart=new Chart(canvas,{
+
+        type:"doughnut",
+
+        data:{
+
+            labels:Object.keys(map),
+
+            datasets:[{
+
+                data:Object.values(map)
+
+            }]
+
+        },
+
+        options:{
+
+            responsive:true,
+
+            maintainAspectRatio:false
+
+        }
+
+    });
+
+}
+
+/* ==========================================================
+   AI Analysis
+========================================================== */
+
+function renderAnalysis(){
+
+    const summary=
+
+        calculateSummary();
+
+    let text="";
+
+    if(summary.total===0){
+
+        text="분석할 훈련 기록이 없습니다.";
+
+    }else{
+
+        if(summary.average>=90){
+
+            text+="훈련 점수가 매우 우수합니다. ";
+
+        }else if(summary.average>=80){
+
+            text+="전체적으로 좋은 훈련 상태입니다. ";
+
+        }else if(summary.average>=70){
+
+            text+="평균 수준입니다. ";
+
+        }else{
+
+            text+="훈련 강도와 집중도를 높여보세요. ";
+
+        }
+
+        if(summary.best>=95){
+
+            text+="최고 기록이 뛰어납니다. ";
+
+        }
+
+        if(summary.minutes>=1000){
+
+            text+="훈련량도 충분합니다.";
+
+        }else{
+
+            text+="운동 시간을 조금 늘리면 더 좋은 결과를 기대할 수 있습니다.";
+
+        }
+
+    }
+
+    DOM.analysis.textContent=text;
+
+}
+
+/* ==========================================================
+   Generate Report
+========================================================== */
+
+function generateReport(){
+
+    renderSummary();
+
+    renderBestRecords();
+
+    renderScoreChart();
+
+    renderTrainingTypeChart();
+
+    renderAnalysis();
+
+}
+/* ==========================================================
+   Events
+========================================================== */
+
+function bindEvents(){
+
+    DOM.generate?.addEventListener(
+
+        "click",
+
+        ()=>{
+
+            state.athlete=
+
+                DOM.athlete.value;
+
+            state.period=
+
+                Number(DOM.period.value);
+
+            generateReport();
+
+        }
+
+    );
+
+    DOM.print?.addEventListener(
+
+        "click",
+
+        ()=>{
+
+            window.print();
+
+        }
+
+    );
+
+}
+
+/* ==========================================================
+   Refresh
+========================================================== */
+
+function refresh(){
+
+    loadRecords();
+
+    renderAthletes();
+
+    generateReport();
+
+}
+
+/* ==========================================================
+   Init
+========================================================== */
+
+function init(){
+
+    cacheDOM();
+
+    loadRecords();
+
+    renderAthletes();
+
+    bindEvents();
+
+    generateReport();
+
+}
+
+/* ==========================================================
+   Public API
+========================================================== */
+
+return{
+
+    init,
+
+    refresh,
+
+    generateReport,
+
+    getFilteredRecords,
+
+    calculateSummary
+
+};
+
+})();
+
+/* ==========================================================
+   Auto Start
+========================================================== */
+
+document.addEventListener(
+
+    "DOMContentLoaded",
+
+    ()=>{
+
+        ReportModule.init();
+
+    }
+
+);
+
+/* ==========================================================
+   Global
+========================================================== */
+
+window.ReportModule=ReportModule;
+/* ==========================================================
+   Athlete Ranking
+========================================================== */
+
+function createRanking(){
+
+    const map={};
+
+    getFilteredRecords().forEach(record=>{
+
+        const id=record.athleteId;
+
+        if(!id){
+
+            return;
+
+        }
+
+        if(!map[id]){
+
+            map[id]={
+
+                id,
+
+                name:record.athleteName,
+
+                score:0,
+
+                count:0,
+
+                minutes:0
+
+            };
+
+        }
+
+        map[id].count++;
+
+        map[id].score+=Number(record.score)||0;
+
+        map[id].minutes+=Number(record.duration)||0;
+
+    });
+
+    return Object.values(map)
+
+    .map(player=>{
+
+        player.average=
+
+            player.count===0
+
+            ?0
+
+            :Math.round(
+
+                player.score/player.count
+
+            );
+
+        return player;
+
+    })
+
+    .sort(
+
+        (a,b)=>b.average-a.average
+
+    );
+
+}
+
+/* ==========================================================
+   Render Ranking
+========================================================== */
+
+function renderRanking(){
+
+    let container=document.getElementById(
+
+        "reportRanking"
+
+    );
+
+    if(!container){
+
+        container=document.createElement("div");
+
+        container.id="reportRanking";
+
+        container.className="card";
+
+        DOM.analysis.parentNode.after(container);
+
+    }
+
+    const ranking=createRanking();
+
+    container.innerHTML=`
+
+<h3>🏆 선수 랭킹</h3>
+
+<table class="table">
+
+<thead>
+
+<tr>
+
+<th>순위</th>
+
+<th>선수</th>
+
+<th>평균점수</th>
+
+<th>훈련</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+${ranking.map((player,index)=>`
+
+<tr>
+
+<td>${index+1}</td>
+
+<td>${player.name}</td>
+
+<td>${player.average}점</td>
+
+<td>${player.count}회</td>
+
+</tr>
+
+`).join("")}
+
+</tbody>
+
+</table>
 
 `;
 
 }
 
-/* ======================================================
-   Athlete Statistics
-====================================================== */
+/* ==========================================================
+   Personal Best
+========================================================== */
 
-function getAthleteStatistics(){
+function renderPersonalBest(){
 
-    const map={};
+    let container=document.getElementById(
 
-    state.filtered.forEach(record=>{
-
-        const name=
-
-            record.athleteName||
-
-            "미등록";
-
-        if(!map[name]){
-
-            map[name]={
-
-                count:0,
-
-                distance:0,
-
-                time:0
-
-            };
-
-        }
-
-        map[name].count++;
-
-        map[name].distance+=
-
-            Number(record.distance)||0;
-
-        map[name].time+=
-
-            Number(record.time)||0;
-
-    });
-
-    return map;
-
-}
-
-/* ======================================================
-   Sport Statistics
-====================================================== */
-
-function getSportStatistics(){
-
-    const map={};
-
-    state.filtered.forEach(record=>{
-
-        const sport=
-
-            record.sport||
-
-            "기타";
-
-        if(!map[sport]){
-
-            map[sport]={
-
-                count:0,
-
-                distance:0,
-
-                time:0
-
-            };
-
-        }
-
-        map[sport].count++;
-
-        map[sport].distance+=
-
-            Number(record.distance)||0;
-
-        map[sport].time+=
-
-            Number(record.time)||0;
-
-    });
-
-    return map;
-
-}
-/* ======================================================
-   Chart.js
-====================================================== */
-
-function destroyCharts(){
-
-    Object.values(state.charts).forEach(chart=>{
-
-        if(chart){
-
-            chart.destroy();
-
-        }
-
-    });
-
-    state.charts={};
-
-}
-
-/* ======================================================
-   Distance Chart
-====================================================== */
-
-function renderDistanceChart(){
-
-    const canvas=document.querySelector(
-
-        "#distanceChart"
+        "personalBest"
 
     );
 
-    if(!canvas){
+    if(!container){
 
-        return;
+        container=document.createElement("div");
+
+        container.id="personalBest";
+
+        container.className="card";
+
+        document.getElementById(
+
+            "reportPage"
+
+        ).appendChild(container);
 
     }
 
-    const context=canvas.getContext("2d");
+    const ranking=createRanking();
 
-    const athletes=getAthleteStatistics();
+    container.innerHTML=`
 
-    const labels=Object.keys(athletes);
+<h3>🥇 개인 최고기록</h3>
 
-    const values=labels.map(
+<ul>
 
-        name=>athletes[name].distance
+${ranking.map(player=>`
 
-    );
+<li>
 
-    state.charts.distance=new Chart(
+${player.name}
 
-        context,
+-
 
-        {
+${player.average}점
 
-            type:"bar",
+(${player.count}회)
 
-            data:{
+</li>
 
-                labels,
+`).join("")}
 
-                datasets:[{
+</ul>
 
-                    label:"총 거리",
-
-                    data:values,
-
-                    borderWidth:1
-
-                }]
-
-            },
-
-            options:{
-
-                responsive:true,
-
-                maintainAspectRatio:false,
-
-                plugins:{
-
-                    legend:{
-
-                        display:true
-
-                    }
-
-                }
-
-            }
-
-        }
-
-    );
+`;
 
 }
-
-/* ======================================================
-   Time Chart
-====================================================== */
-
-function renderTimeChart(){
-
-    const canvas=document.querySelector(
-
-        "#timeChart"
-
-    );
-
-    if(!canvas){
-
-        return;
-
-    }
-
-    const context=canvas.getContext("2d");
-
-    const athletes=getAthleteStatistics();
-
-    const labels=Object.keys(athletes);
-
-    const values=labels.map(
-
-        name=>athletes[name].time
-
-    );
-
-    state.charts.time=new Chart(
-
-        context,
-
-        {
-
-            type:"line",
-
-            data:{
-
-                labels,
-
-                datasets:[{
-
-                    label:"훈련 시간",
-
-                    data:values,
-
-                    tension:0.35,
-
-                    fill:false
-
-                }]
-
-            },
-
-            options:{
-
-                responsive:true,
-
-                maintainAspectRatio:false
-
-            }
-
-        }
-
-    );
-
-}
-
-/* ======================================================
-   Sport Pie Chart
-====================================================== */
-
-function renderSportChart(){
-
-    const canvas=document.querySelector(
-
-        "#sportChart"
-
-    );
-
-    if(!canvas){
-
-        return;
-
-    }
-
-    const context=canvas.getContext("2d");
-
-    const sports=getSportStatistics();
-
-    const labels=Object.keys(sports);
-
-    const values=labels.map(
-
-        name=>sports[name].count
-
-    );
-
-    state.charts.sport=new Chart(
-
-        context,
-
-        {
-
-            type:"pie",
-
-            data:{
-
-                labels,
-
-                datasets:[{
-
-                    data:values
-
-                }]
-
-            },
-
-            options:{
-
-                responsive:true,
-
-                maintainAspectRatio:false
-
-            }
-
-        }
-
-    );
-
-}
-
-/* ======================================================
-   Render Charts
-====================================================== */
-
-function renderCharts(){
-
-    destroyCharts();
-
-    renderDistanceChart();
-
-    renderTimeChart();
-
-    renderSportChart();
-
-}
-/* ======================================================
+/* ==========================================================
    Monthly Statistics
-====================================================== */
+========================================================== */
 
 function getMonthlyStatistics(){
 
     const monthly={};
 
-    state.filtered.forEach(record=>{
+    getFilteredRecords().forEach(record=>{
 
         if(!record.date){
 
@@ -673,25 +893,21 @@ function getMonthlyStatistics(){
 
             monthly[month]={
 
-                count:0,
+                score:0,
 
-                distance:0,
+                minutes:0,
 
-                time:0
+                count:0
 
             };
 
         }
 
+        monthly[month].score+=Number(record.score)||0;
+
+        monthly[month].minutes+=Number(record.duration)||0;
+
         monthly[month].count++;
-
-        monthly[month].distance+=
-
-            Number(record.distance)||0;
-
-        monthly[month].time+=
-
-            Number(record.time)||0;
 
     });
 
@@ -699,25 +915,33 @@ function getMonthlyStatistics(){
 
 }
 
-/* ======================================================
-   Monthly Trend
-====================================================== */
+/* ==========================================================
+   Monthly Chart
+========================================================== */
 
-function renderMonthlyTrend(){
+let monthlyChart=null;
 
-    const canvas=document.querySelector(
+function renderMonthlyChart(){
 
-        "#monthlyChart"
-
-    );
+    let canvas=document.getElementById("monthlyChart");
 
     if(!canvas){
 
-        return;
+        const card=document.createElement("div");
+
+        card.className="chart-card";
+
+        card.innerHTML=
+
+        `<canvas id="monthlyChart"></canvas>`;
+
+        document.getElementById("reportPage")
+
+            .appendChild(card);
+
+        canvas=document.getElementById("monthlyChart");
 
     }
-
-    const context=canvas.getContext("2d");
 
     const monthly=
 
@@ -725,364 +949,135 @@ function renderMonthlyTrend(){
 
     const labels=
 
-        Object.keys(monthly).sort();
+        Object.keys(monthly);
 
     const values=
 
-        labels.map(
+        labels.map(month=>
 
-            month=>monthly[month].distance
+            Math.round(
+
+                monthly[month].score/
+
+                monthly[month].count
+
+            )
 
         );
 
-    state.charts.monthly=new Chart(
+    if(monthlyChart){
 
-        context,
+        monthlyChart.destroy();
 
-        {
+    }
 
-            type:"line",
+    monthlyChart=new Chart(canvas,{
 
-            data:{
+        type:"bar",
 
-                labels,
+        data:{
 
-                datasets:[{
+            labels,
 
-                    label:"월별 거리",
+            datasets:[{
 
-                    data:values,
+                label:"월 평균 점수",
 
-                    fill:false,
+                data:values
 
-                    tension:0.3
+            }]
 
-                }]
+        },
 
-            },
+        options:{
 
-            options:{
+            responsive:true,
 
-                responsive:true,
-
-                maintainAspectRatio:false
-
-            }
-
-        }
-
-    );
-
-}
-
-/* ======================================================
-   Personal Best
-====================================================== */
-
-function getPersonalBest(){
-
-    const result={};
-
-    state.filtered.forEach(record=>{
-
-        const athlete=
-
-            record.athleteName||
-
-            "미등록";
-
-        if(!result[athlete]){
-
-            result[athlete]={
-
-                distance:0,
-
-                time:0,
-
-                training:null
-
-            };
-
-        }
-
-        const distance=
-
-            Number(record.distance)||0;
-
-        const time=
-
-            Number(record.time)||0;
-
-        if(distance>
-
-            result[athlete].distance){
-
-            result[athlete].distance=
-
-                distance;
-
-            result[athlete].training=
-
-                record.trainingName;
-
-            result[athlete].date=
-
-                record.date;
-
-        }
-
-        if(time>
-
-            result[athlete].time){
-
-            result[athlete].time=time;
+            maintainAspectRatio:false
 
         }
 
     });
 
-    return result;
-
 }
 
-/* ======================================================
-   Render PB
-====================================================== */
+/* ==========================================================
+   Training Streak
+========================================================== */
 
-function renderPersonalBest(){
+function calculateTrainingStreak(){
 
-    const container=document.querySelector(
+    const dates=[
 
-        "#personalBest"
+        ...new Set(
 
-    );
+            getFilteredRecords()
 
-    if(!container){
-
-        return;
-
-    }
-
-    const pb=
-
-        getPersonalBest();
-
-    container.innerHTML=
-
-        Object.entries(pb)
-
-        .map(
-
-            ([name,data])=>`
-
-<div class="pb-card">
-
-<h3>${name}</h3>
-
-<p><strong>최고 거리</strong>
-
-${data.distance}</p>
-
-<p><strong>최고 시간</strong>
-
-${data.time}</p>
-
-<p><strong>훈련</strong>
-
-${data.training||"-"}</p>
-
-<p><strong>날짜</strong>
-
-${data.date||"-"}</p>
-
-</div>
-
-`
+            .map(record=>record.date)
 
         )
 
-        .join("");
+    ].sort();
 
-}
+    let current=0;
 
-/* ======================================================
-   Refresh Report
-====================================================== */
+    let best=0;
 
-function refreshReport(){
+    let previous=null;
 
-    filterRecords();
+    dates.forEach(date=>{
 
-    renderSummary();
+        if(previous){
 
-    renderCharts();
+            const diff=(
 
-    renderMonthlyTrend();
+                new Date(date)-
 
-    renderPersonalBest();
+                new Date(previous)
 
-}
-/* ======================================================
-   Athlete Report
-====================================================== */
+            )/86400000;
 
-function generateAthleteReport(){
+            if(diff===1){
 
-    const athletes={};
+                current++;
 
-    state.filtered.forEach(record=>{
+            }else{
 
-        const name=record.athleteName||"미등록";
+                current=1;
 
-        if(!athletes[name]){
+            }
 
-            athletes[name]={
+        }else{
 
-                count:0,
-
-                distance:0,
-
-                time:0,
-
-                trainings:[]
-
-            };
+            current=1;
 
         }
 
-        athletes[name].count++;
+        if(current>best){
 
-        athletes[name].distance+=Number(record.distance)||0;
-
-        athletes[name].time+=Number(record.time)||0;
-
-        athletes[name].trainings.push(record);
-
-    });
-
-    return athletes;
-
-}
-
-/* ======================================================
-   Sport Report
-====================================================== */
-
-function generateSportReport(){
-
-    const sports={};
-
-    state.filtered.forEach(record=>{
-
-        const sport=record.sport||"기타";
-
-        if(!sports[sport]){
-
-            sports[sport]={
-
-                count:0,
-
-                distance:0,
-
-                time:0
-
-            };
+            best=current;
 
         }
 
-        sports[sport].count++;
-
-        sports[sport].distance+=Number(record.distance)||0;
-
-        sports[sport].time+=Number(record.time)||0;
+        previous=date;
 
     });
 
-    return sports;
+    return{
+
+        current,
+
+        best
+
+    };
 
 }
 
-/* ======================================================
-   Growth Rate
-====================================================== */
-
-function calculateGrowthRate(records){
-
-    if(records.length<2){
-
-        return 0;
-
-    }
-
-    const first=Number(records[0].distance)||0;
-
-    const last=Number(
-
-        records[records.length-1].distance
-
-    )||0;
-
-    if(first===0){
-
-        return 0;
-
-    }
-
-    return (
-
-        ((last-first)/first)*100
-
-    ).toFixed(1);
-
-}
-
-/* ======================================================
-   Ranking
-====================================================== */
-
-function createRanking(){
-
-    const athletes=
-
-        generateAthleteReport();
-
-    return Object.entries(athletes)
-
-        .map(([name,data])=>({
-
-            name,
-
-            count:data.count,
-
-            distance:data.distance,
-
-            time:data.time,
-
-            average:
-
-                data.count===0
-
-                ?0
-
-                :data.distance/data.count
-
-        }))
-
-        .sort(
-
-            (a,b)=>
-
-            b.distance-a.distance
-
-        );
-
-}
-
-/* ======================================================
+/* ==========================================================
    MVP
-====================================================== */
+========================================================== */
 
-function calculateMVP(){
+function getMVP(){
 
     const ranking=
 
@@ -1098,93 +1093,43 @@ function calculateMVP(){
 
 }
 
-/* ======================================================
-   Render Ranking
-====================================================== */
-
-function renderRanking(){
-
-    const container=document.querySelector(
-
-        "#rankingList"
-
-    );
-
-    if(!container){
-
-        return;
-
-    }
-
-    const ranking=
-
-        createRanking();
-
-    container.innerHTML=
-
-        ranking.map(
-
-            (player,index)=>`
-
-<div class="ranking-card">
-
-<div class="rank">
-
-${index+1}
-
-</div>
-
-<div class="name">
-
-${player.name}
-
-</div>
-
-<div class="distance">
-
-${player.distance}
-
-</div>
-
-<div class="count">
-
-${player.count}회
-
-</div>
-
-</div>
-
-`
-
-        ).join("");
-
-}
-
-/* ======================================================
-   Render MVP
-====================================================== */
-
 function renderMVP(){
 
-    const container=document.querySelector(
+    let container=
 
-        "#mvpCard"
+        document.getElementById(
 
-    );
+            "reportMVP"
+
+        );
 
     if(!container){
 
-        return;
+        container=document.createElement("div");
+
+        container.id="reportMVP";
+
+        container.className="card";
+
+        document.getElementById(
+
+            "reportPage"
+
+        ).appendChild(container);
 
     }
 
-    const mvp=
+    const mvp=getMVP();
 
-        calculateMVP();
+    const streak=
+
+        calculateTrainingStreak();
 
     if(!mvp){
 
-        container.innerHTML="";
+        container.innerHTML=
+
+        "<h3>MVP 없음</h3>";
 
         return;
 
@@ -1192,464 +1137,268 @@ function renderMVP(){
 
     container.innerHTML=`
 
-<div class="mvp">
+<h3>🏆 이번 기간 MVP</h3>
 
-<h2>🏆 MVP</h2>
+<p><strong>${mvp.name}</strong></p>
 
-<h3>${mvp.name}</h3>
+<p>평균점수 : ${mvp.average}점</p>
 
-<p>총 거리 : ${mvp.distance}</p>
+<p>훈련횟수 : ${mvp.count}회</p>
 
-<p>훈련 횟수 : ${mvp.count}</p>
+<p>총운동시간 : ${mvp.minutes}분</p>
 
-<p>평균 거리 : ${mvp.average.toFixed(2)}</p>
+<hr>
 
-</div>
+<p>최장 연속훈련 : ${streak.best}일</p>
 
 `;
 
 }
-/* ======================================================
-   Export CSV
-====================================================== */
 
-function exportReportCSV(){
+/* ==========================================================
+   Growth Rate
+========================================================== */
 
-    const rows=[];
+function calculateGrowth(){
 
-    rows.push([
-        "날짜",
-        "선수",
-        "종목",
-        "훈련명",
-        "거리",
-        "시간",
-        "메모"
-    ]);
+    const records=
 
-    state.filtered.forEach(record=>{
+        getFilteredRecords()
 
-        rows.push([
+        .filter(record=>
 
-            record.date||"",
+            record.score!==undefined
 
-            record.athleteName||"",
+        );
 
-            record.sport||"",
+    if(records.length<2){
 
-            record.trainingName||"",
+        return 0;
 
-            record.distance||0,
+    }
 
-            record.time||0,
+    const first=
 
-            record.memo||""
+        Number(records[0].score)||0;
 
-        ]);
+    const last=
 
-    });
+        Number(
 
-    const csv=rows
+            records[records.length-1].score
 
-        .map(row=>row.join(","))
+        )||0;
 
-        .join("\n");
+    return last-first;
 
-    const blob=new Blob(
+}
+/* ==========================================================
+   Grade
+========================================================== */
 
-        [csv],
+function getGrade(score){
 
-        {
+    score=Number(score)||0;
 
-            type:"text/csv;charset=utf-8"
+    if(score>=95) return "S";
+    if(score>=90) return "A";
+    if(score>=80) return "B";
+    if(score>=70) return "C";
+    if(score>=60) return "D";
 
-        }
+    return "F";
+
+}
+
+/* ==========================================================
+   Goal Achievement
+========================================================== */
+
+function calculateGoalAchievement(){
+
+    const summary=calculateSummary();
+
+    const target=90;
+
+    return Math.min(
+
+        100,
+
+        Math.round(
+
+            (summary.average/target)*100
+
+        )
 
     );
 
-    const url=URL.createObjectURL(blob);
-
-    const link=document.createElement("a");
-
-    link.href=url;
-
-    link.download="training-report.csv";
-
-    link.click();
-
-    URL.revokeObjectURL(url);
-
 }
 
-/* ======================================================
-   Export JSON
-====================================================== */
+/* ==========================================================
+   AI Growth Prediction
+========================================================== */
 
-function exportReportJSON(){
+function predictNextScore(){
 
-    const blob=new Blob(
+    const records=getFilteredRecords()
 
-        [
+        .filter(record=>record.score!==undefined);
 
-            JSON.stringify(
+    if(records.length===0){
 
-                state.filtered,
+        return 0;
 
-                null,
+    }
 
-                2
+    const recent=
 
-            )
+        records.slice(-5);
 
-        ],
+    const average=
 
-        {
+        recent.reduce(
 
-            type:"application/json"
+            (sum,record)=>
 
-        }
+            sum+(Number(record.score)||0),
+
+            0
+
+        )/recent.length;
+
+    return Math.round(
+
+        average+2
 
     );
 
-    const url=URL.createObjectURL(blob);
-
-    const link=document.createElement("a");
-
-    link.href=url;
-
-    link.download="training-report.json";
-
-    link.click();
-
-    URL.revokeObjectURL(url);
-
 }
 
-/* ======================================================
-   Print Report
-====================================================== */
+/* ==========================================================
+   Season Report
+========================================================== */
 
-function printReport(){
+function renderSeasonReport(){
 
-    window.print();
+    let container=document.getElementById(
 
-}
+        "seasonReport"
 
-/* ======================================================
-   AI Comment
-====================================================== */
+    );
 
-function generateAIComment(){
+    if(!container){
+
+        container=document.createElement("div");
+
+        container.id="seasonReport";
+
+        container.className="card";
+
+        document.getElementById(
+
+            "reportPage"
+
+        ).appendChild(container);
+
+    }
 
     const summary=
 
         calculateSummary();
 
-    let comment="";
+    const prediction=
 
-    if(summary.totalTraining===0){
+        predictNextScore();
 
-        return "훈련 기록이 없습니다.";
+    const grade=
 
-    }
+        getGrade(summary.average);
 
-    if(summary.averageDistance>=10){
+    const goal=
 
-        comment+=
-
-        "평균 훈련 거리가 매우 우수합니다. ";
-
-    }else if(summary.averageDistance>=5){
-
-        comment+=
-
-        "훈련량이 안정적으로 유지되고 있습니다. ";
-
-    }else{
-
-        comment+=
-
-        "훈련 거리를 조금 더 늘리는 것을 추천합니다. ";
-
-    }
-
-    if(summary.averageTime>=60){
-
-        comment+=
-
-        "훈련 시간이 충분합니다. ";
-
-    }else{
-
-        comment+=
-
-        "훈련 시간을 조금 더 확보하면 좋습니다. ";
-
-    }
-
-    if(summary.bestDistance>=20){
-
-        comment+=
-
-        "최고 기록이 매우 뛰어납니다.";
-
-    }
-
-    return comment;
-
-}
-
-/* ======================================================
-   Render AI Comment
-====================================================== */
-
-function renderAIComment(){
-
-    const container=document.querySelector(
-
-        "#aiComment"
-
-    );
-
-    if(!container){
-
-        return;
-
-    }
+        calculateGoalAchievement();
 
     container.innerHTML=`
 
-<div class="ai-report">
-
-<h3>AI 훈련 분석</h3>
+<h3>📄 시즌 리포트</h3>
 
 <p>
 
-${generateAIComment()}
+훈련횟수 :
+<strong>${summary.total}</strong>
 
 </p>
 
-</div>
+<p>
+
+평균점수 :
+<strong>${summary.average}점</strong>
+
+</p>
+
+<p>
+
+훈련등급 :
+<strong>${grade}</strong>
+
+</p>
+
+<p>
+
+목표달성률 :
+<strong>${goal}%</strong>
+
+</p>
+
+<p>
+
+예상 다음 점수 :
+<strong>${prediction}점</strong>
+
+</p>
 
 `;
 
 }
 
-/* ======================================================
-   PDF (Print Version)
-====================================================== */
+/* ==========================================================
+   Report PDF
+========================================================== */
 
-function exportPDF(){
+function downloadPDF(){
 
-    printReport();
-
-}
-/* ======================================================
-   Event Binding
-====================================================== */
-
-function bindEvents(){
-
-    if(DOM.athlete){
-
-        DOM.athlete.addEventListener(
-
-            "change",
-
-            event=>{
-
-                state.athlete=
-
-                    event.target.value;
-
-                refreshReport();
-
-            }
-
-        );
-
-    }
-
-    if(DOM.sport){
-
-        DOM.sport.addEventListener(
-
-            "change",
-
-            event=>{
-
-                state.sport=
-
-                    event.target.value;
-
-                refreshReport();
-
-            }
-
-        );
-
-    }
-
-    if(DOM.period){
-
-        DOM.period.addEventListener(
-
-            "change",
-
-            event=>{
-
-                state.period=
-
-                    event.target.value;
-
-                refreshReport();
-
-            }
-
-        );
-
-    }
-
-    if(DOM.start){
-
-        DOM.start.addEventListener(
-
-            "change",
-
-            event=>{
-
-                state.startDate=
-
-                    event.target.value;
-
-                refreshReport();
-
-            }
-
-        );
-
-    }
-
-    if(DOM.end){
-
-        DOM.end.addEventListener(
-
-            "change",
-
-            event=>{
-
-                state.endDate=
-
-                    event.target.value;
-
-                refreshReport();
-
-            }
-
-        );
-
-    }
+    window.print();
 
 }
 
-/* ======================================================
-   Reload
-====================================================== */
+/* ==========================================================
+   Update Report
+========================================================== */
 
-function reload(){
+function updateAdvancedReport(){
 
-    loadData();
+    renderRanking();
 
-    refreshReport();
+    renderPersonalBest();
 
-}
+    renderMonthlyChart();
 
-/* ======================================================
-   Init
-====================================================== */
+    renderMVP();
 
-function init(){
-
-    cacheDOM();
-
-    loadData();
-
-    bindEvents();
-
-    refreshReport();
+    renderSeasonReport();
 
 }
 
-/* ======================================================
-   Public API
-====================================================== */
+/* ==========================================================
+   Refresh All
+========================================================== */
 
-return{
+const originalGenerateReport=generateReport;
 
-    init,
+generateReport=function(){
 
-    reload,
+    originalGenerateReport();
 
-    refresh:refreshReport,
-
-    exportCSV:exportReportCSV,
-
-    exportJSON:exportReportJSON,
-
-    exportPDF,
-
-    print:printReport,
-
-    renderCharts,
-
-    renderSummary,
-
-    renderRanking,
-
-    renderMVP,
-
-    renderAIComment,
-
-    getMonthlyStatistics,
-
-    getAthleteStatistics,
-
-    getSportStatistics,
-
-    generateAthleteReport,
-
-    generateSportReport,
-
-    calculateSummary,
-
-    calculateGrowthRate,
-
-    createRanking,
-
-    getPersonalBest
+    updateAdvancedReport();
 
 };
-
-})();
-
-/* ======================================================
-   Auto Start
-====================================================== */
-
-document.addEventListener(
-
-    "DOMContentLoaded",
-
-    ()=>{
-
-        ReportModule.init();
-
-    }
-
-);
-
-/* ======================================================
-   Global
-====================================================== */
-
-window.ReportModule=ReportModule;
