@@ -1,195 +1,350 @@
 /* ======================================================
-   설천고 스포츠과학 훈련센터
-   app.js 1-1
-   기본 설정 / LocalStorage / 공통 유틸
+   weight.js Part 1-1
+   State / Constants / DOM / Utils / Calculations
 ====================================================== */
 
 "use strict";
 
 /* ======================================================
-   앱 정보
+   상태
 ====================================================== */
 
-const APP_NAME = "설천고 스포츠과학 훈련센터";
-const APP_VERSION = "1.0.0";
-const STORAGE_KEY = "seolcheon_sports_science";
+const weightState = {
 
-/* ======================================================
-   기본 데이터
-====================================================== */
+    editingId: null,
 
-const DEFAULT_APP_DATA = {
+    searchKeyword: "",
 
-    athletes: [],
+    selectedBodyPart: "",
 
-    selectedAthleteId: null,
+    selectedExercise: "",
 
-    sportsRecords: [],
+    sortType: "date-desc",
 
-    weightRecords: [],
+    page: 1,
 
-    poseRecords: [],
-
-    settings: {
-
-        darkMode: true,
-
-        autoSave: true,
-
-        sound: true
-
-    }
+    pageSize: 10
 
 };
 
 /* ======================================================
-   앱 데이터
+   운동 부위
 ====================================================== */
 
-let appData = loadAppData();
+const BODY_PARTS = [
+
+    "가슴",
+
+    "등",
+
+    "어깨",
+
+    "하체",
+
+    "이두",
+
+    "삼두",
+
+    "복근",
+
+    "전신"
+
+];
 
 /* ======================================================
-   DOM Helper
+   운동 목록
 ====================================================== */
 
-const $ = (selector, parent = document) =>
-    parent.querySelector(selector);
+const EXERCISE_LIST = {
 
-const $$ = (selector, parent = document) =>
-    [...parent.querySelectorAll(selector)];
+    "가슴": [
+
+        "벤치프레스",
+
+        "인클라인 벤치프레스",
+
+        "덤벨프레스",
+
+        "인클라인 덤벨프레스",
+
+        "체스트프레스",
+
+        "케이블 플라이",
+
+        "펙덱 플라이",
+
+        "푸쉬업"
+
+    ],
+
+    "등": [
+
+        "데드리프트",
+
+        "랫풀다운",
+
+        "풀업",
+
+        "바벨로우",
+
+        "덤벨로우",
+
+        "시티드로우",
+
+        "티바로우",
+
+        "백익스텐션"
+
+    ],
+
+    "어깨": [
+
+        "밀리터리프레스",
+
+        "덤벨 숄더프레스",
+
+        "사이드레터럴레이즈",
+
+        "프론트레이즈",
+
+        "리어델트 플라이",
+
+        "페이스풀",
+
+        "아놀드프레스",
+
+        "슈러그"
+
+    ],
+
+    "하체": [
+
+        "스쿼트",
+
+        "프론트스쿼트",
+
+        "레그프레스",
+
+        "레그익스텐션",
+
+        "레그컬",
+
+        "런지",
+
+        "루마니안 데드리프트",
+
+        "힙쓰러스트",
+
+        "카프레이즈"
+
+    ],
+
+    "이두": [
+
+        "바벨컬",
+
+        "덤벨컬",
+
+        "해머컬",
+
+        "프리처컬",
+
+        "케이블컬"
+
+    ],
+
+    "삼두": [
+
+        "푸쉬다운",
+
+        "오버헤드 익스텐션",
+
+        "라잉 트라이셉스 익스텐션",
+
+        "클로즈그립 벤치프레스",
+
+        "딥스"
+
+    ],
+
+    "복근": [
+
+        "크런치",
+
+        "레그레이즈",
+
+        "행잉 레그레이즈",
+
+        "플랭크",
+
+        "사이드 플랭크",
+
+        "러시안 트위스트",
+
+        "케이블 크런치"
+
+    ],
+
+    "전신": [
+
+        "클린",
+
+        "파워클린",
+
+        "스내치",
+
+        "케틀벨 스윙",
+
+        "버피",
+
+        "슬레드 푸쉬",
+
+        "메디신볼 슬램"
+
+    ]
+
+};
 
 /* ======================================================
-   LocalStorage
+   DOM
 ====================================================== */
 
-function loadAppData() {
+function getWeightElements() {
 
-    try{
+    return {
 
-        const saved =
-            localStorage.getItem(STORAGE_KEY);
+        form:
+            document.querySelector("#weightForm"),
 
-        if(!saved){
+        date:
+            document.querySelector("#weightDate"),
 
-            return structuredClone(
-                DEFAULT_APP_DATA
-            );
+        bodyPart:
+            document.querySelector("#weightBodyPart"),
 
-        }
+        exercise:
+            document.querySelector("#weightExercise"),
 
-        const parsed = JSON.parse(saved);
+        weight:
+            document.querySelector("#weightKg"),
 
-        return {
+        reps:
+            document.querySelector("#weightReps"),
 
-            ...structuredClone(DEFAULT_APP_DATA),
+        sets:
+            document.querySelector("#weightSets"),
 
-            ...parsed,
+        rpe:
+            document.querySelector("#weightRPE"),
 
-            settings:{
+        memo:
+            document.querySelector("#weightMemo"),
 
-                ...DEFAULT_APP_DATA.settings,
+        submit:
+            document.querySelector("#weightSubmitButton"),
 
-                ...(parsed.settings || {})
+        cancel:
+            document.querySelector("#cancelWeightEditButton"),
 
-            }
+        list:
+            document.querySelector("#weightList"),
 
-        };
+        search:
+            document.querySelector("#weightSearch"),
 
-    }
+        bodyPartFilter:
+            document.querySelector("#weightFilter"),
 
-    catch(error){
+        exerciseFilter:
+            document.querySelector("#weightExerciseFilter"),
 
-        console.error(error);
+        sort:
+            document.querySelector("#weightSort"),
 
-        return structuredClone(
-            DEFAULT_APP_DATA
-        );
+        pagination:
+            document.querySelector("#weightPagination"),
 
-    }
+        pageInfo:
+            document.querySelector("#weightPageInfo"),
+
+        previousPage:
+            document.querySelector("#weightPrevPage"),
+
+        nextPage:
+            document.querySelector("#weightNextPage"),
+
+        previewOneRM:
+            document.querySelector("#previewOneRM"),
+
+        previewVolume:
+            document.querySelector("#previewVolume"),
+
+        previewIntensity:
+            document.querySelector("#previewIntensity")
+
+    };
 
 }
 
 /* ======================================================
-   저장
+   공통 함수 안전 처리
 ====================================================== */
 
-function saveAppData(){
-
-    try{
-
-        localStorage.setItem(
-
-            STORAGE_KEY,
-
-            JSON.stringify(appData)
-
-        );
-
-        return true;
-
-    }
-
-    catch(error){
-
-        console.error(error);
-
-        showToast(
-            "저장 실패",
-            "error"
-        );
-
-        return false;
-
-    }
-
-}
-
-/* ======================================================
-   UUID
-====================================================== */
-
-function createId(prefix="item"){
-
-    return `${prefix}-${Date.now()}-${Math.random()
-    .toString(36)
-    .substring(2,8)}`;
-
-}
-
-/* ======================================================
-   숫자 변환
-====================================================== */
-
-function toNumber(value, def=0){
+function weightToNumber(value) {
 
     const number = Number(value);
 
     return Number.isFinite(number)
         ? number
-        : def;
+        : 0;
 
 }
 
-/* ======================================================
-   오늘 날짜
-====================================================== */
+function weightCreateId(prefix = "weight") {
 
-function getTodayValue(){
+    if(typeof createId === "function") {
 
-    const date = new Date();
+        return createId(prefix);
 
-    return date.toISOString()
-        .slice(0,10);
+    }
+
+    return `${prefix}_${Date.now()}_${Math.random()
+        .toString(36)
+        .slice(2, 10)}`;
 
 }
 
-/* ======================================================
-   날짜 표시
-====================================================== */
+function weightEscapeHTML(value) {
 
-function formatDate(value){
+    if(typeof escapeHTML === "function") {
 
-    if(!value){
+        return escapeHTML(value);
+
+    }
+
+    return String(value ?? "")
+
+        .replaceAll("&", "&amp;")
+
+        .replaceAll("<", "&lt;")
+
+        .replaceAll(">", "&gt;")
+
+        .replaceAll('"', "&quot;")
+
+        .replaceAll("'", "&#039;");
+
+}
+
+function weightFormatDate(value) {
+
+    if(typeof formatDate === "function") {
+
+        return formatDate(value);
+
+    }
+
+    if(!value) {
 
         return "-";
 
@@ -197,7 +352,7 @@ function formatDate(value){
 
     const date = new Date(value);
 
-    if(isNaN(date)){
+    if(Number.isNaN(date.getTime())) {
 
         return value;
 
@@ -209,11 +364,11 @@ function formatDate(value){
 
         {
 
-            year:"numeric",
+            year: "numeric",
 
-            month:"2-digit",
+            month: "2-digit",
 
-            day:"2-digit"
+            day: "2-digit"
 
         }
 
@@ -221,127 +376,71 @@ function formatDate(value){
 
 }
 
-/* ======================================================
-   HTML Escape
-====================================================== */
+function weightFormatNumber(value) {
 
-function escapeHTML(text=""){
+    const number = weightToNumber(value);
 
-    return String(text)
+    if(typeof formatNumber === "function") {
 
-    .replaceAll("&","&amp;")
+        return formatNumber(number);
 
-    .replaceAll("<","&lt;")
+    }
 
-    .replaceAll(">","&gt;")
-
-    .replaceAll('"',"&quot;")
-
-    .replaceAll("'","&#039;");
+    return number.toLocaleString("ko-KR");
 
 }
 
-/* ======================================================
-   Toast
-====================================================== */
+function weightGetTodayValue() {
 
-let toastTimer = null;
+    if(typeof getTodayValue === "function") {
 
-function showToast(
+        return getTodayValue();
 
-    message,
+    }
 
-    type="default"
+    const now = new Date();
 
-){
+    const localDate = new Date(
 
-    const toast = $("#toast");
+        now.getTime() -
 
-    if(!toast){
+        now.getTimezoneOffset() * 60000
 
-        console.log(message);
+    );
+
+    return localDate
+
+        .toISOString()
+
+        .slice(0, 10);
+
+}
+
+function weightShowToast(message, type = "info") {
+
+    if(typeof showToast === "function") {
+
+        showToast(message, type);
 
         return;
 
     }
 
-    clearTimeout(toastTimer);
-
-    toast.className="";
-
-    toast.id="toast";
-
-    toast.textContent=message;
-
-    if(type==="success"){
-
-        toast.classList.add(
-            "success"
-        );
-
-    }
-
-    if(type==="error"){
-
-        toast.classList.add(
-            "error"
-        );
-
-    }
-
-    requestAnimationFrame(()=>{
-
-        toast.classList.add(
-            "show"
-        );
-
-    });
-
-    toastTimer=setTimeout(()=>{
-
-        toast.classList.remove(
-            "show"
-        );
-
-    },2500);
+    console.log(`[${type}] ${message}`);
 
 }
 
-/* ======================================================
-   선택 선수
-====================================================== */
+function weightAutoSave() {
 
-function getSelectedAthlete(){
+    if(typeof autoSave === "function") {
 
-    if(!appData.selectedAthleteId){
+        autoSave();
 
-        return null;
+        return;
 
     }
 
-    return appData.athletes.find(
-
-        athlete=>
-
-        athlete.id===
-
-        appData.selectedAthleteId
-
-    ) || null;
-
-}
-
-/* ======================================================
-   자동 저장
-====================================================== */
-
-function autoSave(){
-
-    if(
-
-        appData.settings.autoSave
-
-    ){
+    if(typeof saveAppData === "function") {
 
         saveAppData();
 
@@ -349,885 +448,544 @@ function autoSave(){
 
 }
 
-/* ======================================================
-   로그
-====================================================== */
+function weightRenderDashboard() {
 
-function log(...args){
+    if(typeof renderDashboard === "function") {
 
-    console.log(
-
-        `[${APP_NAME}]`,
-
-        ...args
-
-    );
-
-}
-
-/* ======================================================
-   앱 상태
-====================================================== */
-
-const appState={
-
-    charts:{},
-
-    editingAthleteId:null,
-
-    currentPage:"dashboardPage",
-
-    loading:false
-
-};
-/* ======================================================
-   app.js 1-2
-   페이지 이동 / 사이드바 / 헤더 / Confirm Modal
-====================================================== */
-
-/* ======================================================
-   페이지 제목
-====================================================== */
-
-const PAGE_TITLES = {
-
-    dashboardPage : "대시보드",
-
-    athletePage : "선수 관리",
-
-    sportsPage : "종목 훈련",
-
-    weightPage : "웨이트 훈련",
-
-    posePage : "AI 자세 분석",
-
-    recordsPage : "훈련 기록",
-
-    reportPage : "보고서",
-
-    settingsPage : "설정"
-
-};
-
-/* ======================================================
-   헤더 제목
-====================================================== */
-
-function updateHeaderTitle(pageId){
-
-    const title =
-
-        $("#currentPageTitle") ||
-
-        $("#headerTitle") ||
-
-        $(".header-title");
-
-    if(!title){
-
-        return;
-
-    }
-
-    title.textContent=
-
-        PAGE_TITLES[pageId] ||
-
-        APP_NAME;
-
-}
-
-/* ======================================================
-   페이지 새로고침
-====================================================== */
-
-function refreshPage(pageId){
-
-    updateSelectedAthleteDisplay();
-
-    switch(pageId){
-
-        case "dashboardPage":
-
-            window.renderDashboard?.();
-
-            break;
-
-        case "athletePage":
-
-            window.renderAthleteList?.();
-
-            break;
-
-        case "sportsPage":
-
-            window.renderSportsPage?.();
-
-            break;
-
-        case "weightPage":
-
-            window.renderWeightPage?.();
-
-            break;
-
-        case "posePage":
-
-            window.renderPosePage?.();
-
-            break;
-
-        case "recordsPage":
-
-            window.renderRecordsPage?.();
-
-            break;
-
-        case "reportPage":
-
-            window.renderReportPage?.();
-
-            break;
-
-        case "settingsPage":
-
-            window.renderSettingsPage?.();
-
-            break;
+        renderDashboard();
 
     }
 
 }
 
 /* ======================================================
-   페이지 이동
+   appData 안전 처리
 ====================================================== */
 
-function openPage(pageId){
+function ensureWeightDataStore() {
 
-    const page=document.getElementById(pageId);
+    if(typeof window.appData !== "object" || !window.appData) {
 
-    if(!page){
-
-        console.warn(pageId);
-
-        return;
+        window.appData = {};
 
     }
 
-    $$(".app-page").forEach(item=>{
+    if(!Array.isArray(window.appData.weightRecords)) {
 
-        item.classList.remove("active-page");
+        window.appData.weightRecords = [];
 
-    });
+    }
 
-    page.classList.add("active-page");
+    return window.appData.weightRecords;
 
-    $$(".menu-button").forEach(button=>{
+}
 
-        const target=
+/* ======================================================
+   선택 선수
+====================================================== */
 
-            button.dataset.page ||
+function getWeightSelectedAthlete() {
 
-            button.dataset.target;
+    if(typeof getSelectedAthlete !== "function") {
 
-        button.classList.toggle(
+        return null;
 
-            "active",
+    }
 
-            target===pageId
+    return getSelectedAthlete();
+
+}
+
+function requireWeightAthlete() {
+
+    const athlete = getWeightSelectedAthlete();
+
+    if(!athlete) {
+
+        weightShowToast(
+
+            "선수를 먼저 선택하세요.",
+
+            "error"
 
         );
 
-    });
+        return null;
 
-    appState.currentPage=pageId;
+    }
 
-    updateHeaderTitle(pageId);
-
-    refreshPage(pageId);
-
-    closeSidebar();
+    return athlete;
 
 }
 
 /* ======================================================
-   메뉴 이벤트
+   1RM 계산
+   Epley 공식
 ====================================================== */
 
-function initializeNavigation(){
+function calculateOneRM(weight, reps) {
 
-    $$(".menu-button").forEach(button=>{
+    const safeWeight =
+        weightToNumber(weight);
 
-        button.addEventListener(
+    const safeReps =
+        weightToNumber(reps);
 
-            "click",
+    if(safeWeight <= 0 || safeReps <= 0) {
 
-            ()=>{
+        return 0;
 
-                const page=
+    }
 
-                    button.dataset.page ||
+    if(safeReps === 1) {
 
-                    button.dataset.target;
+        return Number(
 
-                if(page){
-
-                    openPage(page);
-
-                }
-
-            }
+            safeWeight.toFixed(1)
 
         );
 
-    });
+    }
 
-    $$("[data-open-page]").forEach(button=>{
+    return Number(
 
-        button.addEventListener(
+        (
 
-            "click",
+            safeWeight *
 
-            ()=>{
+            (1 + safeReps / 30)
 
-                openPage(
+        ).toFixed(1)
 
-                    button.dataset.openPage
-
-                );
-
-            }
-
-        );
-
-    });
+    );
 
 }
 
 /* ======================================================
-   Sidebar
+   볼륨 계산
 ====================================================== */
 
-function openSidebar(){
+function calculateVolume(weight, reps, sets) {
 
-    $(".sidebar")?.classList.add("open");
+    return Number(
 
-    $(".sidebar-overlay")?.classList.add("show");
+        (
 
-    document.body.style.overflow="hidden";
+            weightToNumber(weight) *
 
-}
+            weightToNumber(reps) *
 
-function closeSidebar(){
+            weightToNumber(sets)
 
-    $(".sidebar")?.classList.remove("open");
+        ).toFixed(1)
 
-    $(".sidebar-overlay")?.classList.remove("show");
-
-    document.body.style.overflow="";
+    );
 
 }
 
-function toggleSidebar(){
+/* ======================================================
+   강도 계산
+====================================================== */
 
-    const sidebar=$(".sidebar");
+function calculateIntensity(weight, oneRM) {
 
-    if(!sidebar){
+    const safeWeight =
+        weightToNumber(weight);
 
-        return;
+    const safeOneRM =
+        weightToNumber(oneRM);
+
+    if(safeWeight <= 0 || safeOneRM <= 0) {
+
+        return 0;
 
     }
 
-    if(sidebar.classList.contains("open")){
+    return Number(
 
-        closeSidebar();
+        (
 
-    }
+            safeWeight /
 
-    else{
+            safeOneRM *
 
-        openSidebar();
+            100
 
-    }
-
-}
-
-/* ======================================================
-   Sidebar 초기화
-====================================================== */
-
-function initializeSidebar(){
-
-    $("#mobileMenuButton")
-
-    ?.addEventListener(
-
-        "click",
-
-        toggleSidebar
-
-    );
-
-    $(".sidebar-overlay")
-
-    ?.addEventListener(
-
-        "click",
-
-        closeSidebar
-
-    );
-
-    window.addEventListener(
-
-        "resize",
-
-        ()=>{
-
-            if(window.innerWidth>1024){
-
-                closeSidebar();
-
-            }
-
-        }
+        ).toFixed(1)
 
     );
 
 }
 
 /* ======================================================
-   Confirm Modal
+   기록 값 보정
 ====================================================== */
 
-let confirmCallback=null;
+function normalizeWeightRecord(record = {}) {
 
-function openConfirmModal({
+    const weight =
+        weightToNumber(record.weight);
 
-    title="확인",
+    const reps =
+        weightToNumber(record.reps);
 
-    message="계속하시겠습니까?",
+    const sets =
+        weightToNumber(record.sets);
 
-    confirmText="확인",
+    const oneRM =
+        weightToNumber(record.oneRM) ||
 
-    onConfirm=null
+        calculateOneRM(weight, reps);
 
-}={}){
+    const volume =
+        weightToNumber(record.volume) ||
 
-    const modal=$("#confirmModal");
+        calculateVolume(weight, reps, sets);
 
-    if(!modal){
+    const intensity =
+        weightToNumber(record.intensity) ||
 
-        if(confirm(message)){
+        calculateIntensity(weight, oneRM);
 
-            onConfirm?.();
+    return {
 
-        }
+        ...record,
 
-        return;
+        weight,
 
-    }
+        reps,
 
-    $("#confirmTitle")?.textContent=title;
+        sets,
 
-    $("#confirmMessage")?.textContent=message;
+        rpe:
+            weightToNumber(record.rpe),
 
-    $("#confirmButton")?.textContent=confirmText;
+        oneRM,
 
-    confirmCallback=onConfirm;
+        volume,
 
-    modal.classList.add("show");
+        intensity,
 
-}
+        memo:
+            String(record.memo ?? ""),
 
-function closeConfirmModal(){
+        bodyPart:
+            String(record.bodyPart ?? ""),
 
-    $("#confirmModal")
-
-    ?.classList.remove("show");
-
-    confirmCallback=null;
-
-}
-
-function initializeConfirmModal(){
-
-    $("#confirmCancelButton")
-
-    ?.addEventListener(
-
-        "click",
-
-        closeConfirmModal
-
-    );
-
-    $("#confirmButton")
-
-    ?.addEventListener(
-
-        "click",
-
-        ()=>{
-
-            const callback=
-
-                confirmCallback;
-
-            closeConfirmModal();
-
-            callback?.();
-
-        }
-
-    );
-
-    $("#confirmModal")
-
-    ?.addEventListener(
-
-        "click",
-
-        event=>{
-
-            if(
-
-                event.target===
-
-                $("#confirmModal")
-
-            ){
-
-                closeConfirmModal();
-
-            }
-
-        }
-
-    );
-
-}
-
-/* ======================================================
-   선택 선수 표시
-====================================================== */
-
-function updateSelectedAthleteDisplay(){
-
-    const athlete=
-
-        getSelectedAthlete();
-
-    const text=
-
-        athlete
-
-        ? athlete.name
-
-        : "선수 미선택";
-
-    [
-
-        "#selectedAthleteName",
-
-        "#dashboardSelectedAthlete",
-
-        "#headerSelectedAthlete"
-
-    ].forEach(selector=>{
-
-        const el=$(selector);
-
-        if(el){
-
-            el.textContent=text;
-
-        }
-
-    });
-
-}
-/* ======================================================
-   app.js 1-3
-   초기화 / 키보드 이벤트 / 공통 이벤트 / 시작
-====================================================== */
-
-/* ======================================================
-   키보드 이벤트
-====================================================== */
-
-function initializeKeyboardEvents(){
-
-    document.addEventListener(
-
-        "keydown",
-
-        event=>{
-
-            switch(event.key){
-
-                case "Escape":
-
-                    closeConfirmModal();
-
-                    closeSidebar();
-
-                    $("#imagePreviewModal")
-                    ?.classList.remove("show");
-
-                    break;
-
-            }
-
-        }
-
-    );
-
-}
-
-/* ======================================================
-   자동 저장
-====================================================== */
-
-function initializeAutoSave(){
-
-    window.addEventListener(
-
-        "beforeunload",
-
-        ()=>{
-
-            autoSave();
-
-        }
-
-    );
-
-}
-
-/* ======================================================
-   온라인 / 오프라인
-====================================================== */
-
-function initializeNetworkEvents(){
-
-    window.addEventListener(
-
-        "online",
-
-        ()=>{
-
-            showToast(
-
-                "인터넷에 다시 연결됐어용.",
-
-                "success"
-
-            );
-
-        }
-
-    );
-
-    window.addEventListener(
-
-        "offline",
-
-        ()=>{
-
-            showToast(
-
-                "현재 오프라인 상태예용.",
-
-                "error"
-
-            );
-
-        }
-
-    );
-
-}
-
-/* ======================================================
-   현재 시간
-====================================================== */
-
-function updateClock(){
-
-    const clock =
-
-        $("#currentTime") ||
-
-        $("#headerClock");
-
-    if(!clock){
-
-        return;
-
-    }
-
-    const now = new Date();
-
-    clock.textContent =
-
-        now.toLocaleString(
-
-            "ko-KR"
-
-        );
-
-}
-
-function initializeClock(){
-
-    updateClock();
-
-    setInterval(
-
-        updateClock,
-
-        1000
-
-    );
-
-}
-
-/* ======================================================
-   로딩 종료
-====================================================== */
-
-function hideLoadingScreen(){
-
-    const loading =
-
-        $("#loadingScreen");
-
-    if(!loading){
-
-        return;
-
-    }
-
-    loading.classList.add(
-
-        "hide"
-
-    );
-
-    setTimeout(()=>{
-
-        loading.remove();
-
-    },500);
-
-}
-
-/* ======================================================
-   앱 시작
-====================================================== */
-
-function initializeApp(){
-
-    initializeNavigation();
-
-    initializeSidebar();
-
-    initializeConfirmModal();
-
-    initializeKeyboardEvents();
-
-    initializeAutoSave();
-
-    initializeNetworkEvents();
-
-    initializeClock();
-
-    updateSelectedAthleteDisplay();
-
-    renderDashboard?.();
-
-    renderAthleteList?.();
-
-    renderSettingsPage?.();
-
-    openPage(
-
-        appState.currentPage ||
-
-        "dashboardPage"
-
-    );
-
-    hideLoadingScreen();
-
-    log(
-
-        APP_NAME,
-
-        APP_VERSION,
-
-        "시작 완료"
-
-    );
-
-}
-
-/* ======================================================
-   DOM Ready
-====================================================== */
-
-document.addEventListener(
-
-    "DOMContentLoaded",
-
-    ()=>{
-
-        initializeApp();
-
-    }
-
-);
-
-/* ======================================================
-   공통 Export
-====================================================== */
-
-window.appData = appData;
-
-window.appState = appState;
-
-window.$ = $;
-
-window.$$ = $$;
-
-window.saveAppData = saveAppData;
-
-window.loadAppData = loadAppData;
-
-window.autoSave = autoSave;
-
-window.createId = createId;
-
-window.toNumber = toNumber;
-
-window.getTodayValue = getTodayValue;
-
-window.formatDate = formatDate;
-
-window.escapeHTML = escapeHTML;
-
-window.showToast = showToast;
-
-window.openConfirmModal = openConfirmModal;
-
-window.closeConfirmModal = closeConfirmModal;
-
-window.openSidebar = openSidebar;
-
-window.closeSidebar = closeSidebar;
-
-window.toggleSidebar = toggleSidebar;
-
-window.openPage = openPage;
-
-window.refreshPage = refreshPage;
-
-window.getSelectedAthlete = getSelectedAthlete;
-
-window.updateSelectedAthleteDisplay =
-    updateSelectedAthleteDisplay;
-
-window.hideLoadingScreen =
-    hideLoadingScreen;
-
-window.initializeApp =
-    initializeApp;
-
-/* ======================================================
-   app.js Part 1 끝
-====================================================== */
-/* ======================================================
-   app.js Part 2-1
-   선수 관리(CRUD)
-====================================================== */
-
-"use strict";
-
-/* ======================================================
-   수정 상태
-====================================================== */
-
-let editingAthleteId = null;
-
-/* ======================================================
-   선수 폼 요소
-====================================================== */
-
-function getAthleteFormElements(){
-
-    return{
-
-        form:$("#athleteForm"),
-
-        name:$("#athleteName"),
-
-        studentNumber:$("#athleteStudentNumber"),
-
-        grade:$("#athleteGrade"),
-
-        classNumber:$("#athleteClass"),
-
-        sport:$("#athleteSport"),
-
-        gender:$("#athleteGender"),
-
-        birthDate:$("#athleteBirthDate"),
-
-        height:$("#athleteHeight"),
-
-        weight:$("#athleteWeight"),
-
-        memo:$("#athleteMemo"),
-
-        submit:$("#addAthleteButton"),
-
-        cancel:$("#cancelAthleteEditButton")
+        exercise:
+            String(record.exercise ?? "")
 
     };
 
 }
 
 /* ======================================================
-   입력값 가져오기
+   날짜 기본값
 ====================================================== */
 
-function getAthleteFormData(){
+function initializeWeightDate() {
 
-    const e = getAthleteFormElements();
+    const elements =
+        getWeightElements();
 
-    return{
+    if(
 
-        name:e.name?.value.trim() || "",
+        elements.date &&
 
-        studentNumber:e.studentNumber?.value.trim() || "",
+        !elements.date.value
 
-        grade:e.grade?.value || "",
+    ) {
 
-        classNumber:e.classNumber?.value || "",
+        elements.date.value =
+            weightGetTodayValue();
 
-        sport:e.sport?.value || "",
+    }
 
-        gender:e.gender?.value || "",
+}
 
-        birthDate:e.birthDate?.value || "",
+/* ======================================================
+   운동 부위 옵션
+====================================================== */
 
-        height:toNumber(e.height?.value),
+function initializeWeightBodyPartOptions() {
 
-        weight:toNumber(e.weight?.value),
+    const elements =
+        getWeightElements();
 
-        memo:e.memo?.value.trim() || ""
+    if(!elements.bodyPart) {
+
+        return;
+
+    }
+
+    const currentValue =
+        elements.bodyPart.value;
+
+    elements.bodyPart.innerHTML =
+
+        `<option value="">운동 부위 선택</option>`;
+
+    BODY_PARTS.forEach(bodyPart => {
+
+        elements.bodyPart.insertAdjacentHTML(
+
+            "beforeend",
+
+            `<option value="${weightEscapeHTML(bodyPart)}">
+                ${weightEscapeHTML(bodyPart)}
+            </option>`
+
+        );
+
+    });
+
+    if(BODY_PARTS.includes(currentValue)) {
+
+        elements.bodyPart.value =
+            currentValue;
+
+    }
+
+}
+
+/* ======================================================
+   운동 선택 옵션
+====================================================== */
+
+function updateExerciseOptions(selectedExercise = "") {
+
+    const elements =
+        getWeightElements();
+
+    if(
+
+        !elements.bodyPart ||
+
+        !elements.exercise
+
+    ) {
+
+        return;
+
+    }
+
+    const bodyPart =
+        elements.bodyPart.value;
+
+    const exercises =
+        EXERCISE_LIST[bodyPart] || [];
+
+    const previousValue =
+        selectedExercise ||
+
+        elements.exercise.value;
+
+    elements.exercise.innerHTML =
+
+        `<option value="">운동 선택</option>`;
+
+    exercises.forEach(exercise => {
+
+        elements.exercise.insertAdjacentHTML(
+
+            "beforeend",
+
+            `<option value="${weightEscapeHTML(exercise)}">
+                ${weightEscapeHTML(exercise)}
+            </option>`
+
+        );
+
+    });
+
+    if(exercises.includes(previousValue)) {
+
+        elements.exercise.value =
+            previousValue;
+
+    }
+
+}
+
+/* ======================================================
+   실시간 미리보기
+====================================================== */
+
+function updateWeightPreview() {
+
+    const elements =
+        getWeightElements();
+
+    const oneRM =
+        calculateOneRM(
+
+            elements.weight?.value,
+
+            elements.reps?.value
+
+        );
+
+    const volume =
+        calculateVolume(
+
+            elements.weight?.value,
+
+            elements.reps?.value,
+
+            elements.sets?.value
+
+        );
+
+    const intensity =
+        calculateIntensity(
+
+            elements.weight?.value,
+
+            oneRM
+
+        );
+
+    if(elements.previewOneRM) {
+
+        elements.previewOneRM.textContent =
+            `${oneRM} kg`;
+
+    }
+
+    if(elements.previewVolume) {
+
+        elements.previewVolume.textContent =
+            `${weightFormatNumber(volume)} kg`;
+
+    }
+
+    if(elements.previewIntensity) {
+
+        elements.previewIntensity.textContent =
+            `${intensity}%`;
+
+    }
+
+}
+/* ======================================================
+   weight.js Part 1-2
+   Form / Validation / Save / Update / Reset
+====================================================== */
+
+/* ======================================================
+   폼 데이터 가져오기
+====================================================== */
+
+function getWeightFormData() {
+
+    const elements =
+        getWeightElements();
+
+    const athlete =
+        getWeightSelectedAthlete();
+
+    const weight =
+        weightToNumber(
+
+            elements.weight?.value
+
+        );
+
+    const reps =
+        weightToNumber(
+
+            elements.reps?.value
+
+        );
+
+    const sets =
+        weightToNumber(
+
+            elements.sets?.value
+
+        );
+
+    const oneRM =
+        calculateOneRM(
+
+            weight,
+
+            reps
+
+        );
+
+    const volume =
+        calculateVolume(
+
+            weight,
+
+            reps,
+
+            sets
+
+        );
+
+    const intensity =
+        calculateIntensity(
+
+            weight,
+
+            oneRM
+
+        );
+
+    return {
+
+        athleteId:
+            athlete?.id || "",
+
+        athleteName:
+            athlete?.name ||
+
+            athlete?.athleteName ||
+
+            "",
+
+        date:
+            elements.date?.value ||
+
+            weightGetTodayValue(),
+
+        bodyPart:
+            elements.bodyPart?.value ||
+
+            "",
+
+        exercise:
+            elements.exercise?.value ||
+
+            "",
+
+        weight,
+
+        reps,
+
+        sets,
+
+        rpe:
+            weightToNumber(
+
+                elements.rpe?.value
+
+            ),
+
+        memo:
+            String(
+
+                elements.memo?.value || ""
+
+            ).trim(),
+
+        oneRM,
+
+        volume,
+
+        intensity
 
     };
 
@@ -1237,27 +995,115 @@ function getAthleteFormData(){
    입력 검사
 ====================================================== */
 
-function validateAthleteData(data){
+function validateWeightData(data) {
 
-    if(!data.name){
+    if(!data.athleteId) {
 
-        showToast("이름을 입력하세요.","error");
+        weightShowToast(
 
-        return false;
+            "선수를 먼저 선택하세요.",
 
-    }
+            "error"
 
-    if(data.height<0 || data.height>250){
-
-        showToast("키를 확인하세요.","error");
+        );
 
         return false;
 
     }
 
-    if(data.weight<0 || data.weight>250){
+    if(!data.date) {
 
-        showToast("몸무게를 확인하세요.","error");
+        weightShowToast(
+
+            "운동 날짜를 입력하세요.",
+
+            "error"
+
+        );
+
+        return false;
+
+    }
+
+    if(!data.bodyPart) {
+
+        weightShowToast(
+
+            "운동 부위를 선택하세요.",
+
+            "error"
+
+        );
+
+        return false;
+
+    }
+
+    if(!data.exercise) {
+
+        weightShowToast(
+
+            "운동을 선택하세요.",
+
+            "error"
+
+        );
+
+        return false;
+
+    }
+
+    if(data.weight <= 0) {
+
+        weightShowToast(
+
+            "중량을 입력하세요.",
+
+            "error"
+
+        );
+
+        return false;
+
+    }
+
+    if(data.reps <= 0) {
+
+        weightShowToast(
+
+            "횟수를 입력하세요.",
+
+            "error"
+
+        );
+
+        return false;
+
+    }
+
+    if(data.sets <= 0) {
+
+        weightShowToast(
+
+            "세트 수를 입력하세요.",
+
+            "error"
+
+        );
+
+        return false;
+
+    }
+
+    if(data.rpe < 0 || data.rpe > 10) {
+
+        weightShowToast(
+
+            "RPE는 0부터 10까지 입력하세요.",
+
+            "error"
+
+        );
 
         return false;
 
@@ -1268,26 +1114,163 @@ function validateAthleteData(data){
 }
 
 /* ======================================================
-   BMI
+   새 기록 저장
 ====================================================== */
 
-function calculateBMI(height,weight){
+function saveWeightRecord(event) {
 
-    const h = toNumber(height)/100;
+    event?.preventDefault();
 
-    const w = toNumber(weight);
+    const athlete =
+        requireWeightAthlete();
 
-    if(h<=0 || w<=0){
+    if(!athlete) {
 
-        return null;
+        return;
 
     }
 
-    return Number(
+    const records =
+        ensureWeightDataStore();
 
-        (w/(h*h)).toFixed(1)
+    const formData =
+        getWeightFormData();
+
+    if(!validateWeightData(formData)) {
+
+        return;
+
+    }
+
+    const now =
+        new Date().toISOString();
+
+    const record = {
+
+        id:
+            weightCreateId("weight"),
+
+        ...formData,
+
+        createdAt:
+            now,
+
+        updatedAt:
+            now
+
+    };
+
+    records.unshift(record);
+
+    weightAutoSave();
+
+    resetWeightForm();
+
+    refreshWeightPage();
+
+    weightRenderDashboard();
+
+    weightShowToast(
+
+        "웨이트 기록이 저장되었습니다.",
+
+        "success"
 
     );
+
+}
+
+/* ======================================================
+   기록 수정 저장
+====================================================== */
+
+function updateWeightRecord(event) {
+
+    event?.preventDefault();
+
+    const records =
+        ensureWeightDataStore();
+
+    const index =
+        records.findIndex(
+
+            record =>
+
+                record.id ===
+
+                weightState.editingId
+
+        );
+
+    if(index === -1) {
+
+        weightShowToast(
+
+            "수정할 기록을 찾을 수 없습니다.",
+
+            "error"
+
+        );
+
+        resetWeightForm();
+
+        return;
+
+    }
+
+    const formData =
+        getWeightFormData();
+
+    if(!validateWeightData(formData)) {
+
+        return;
+
+    }
+
+    records[index] = {
+
+        ...records[index],
+
+        ...formData,
+
+        updatedAt:
+            new Date().toISOString()
+
+    };
+
+    weightAutoSave();
+
+    resetWeightForm();
+
+    refreshWeightPage();
+
+    weightRenderDashboard();
+
+    weightShowToast(
+
+        "웨이트 기록을 수정했습니다.",
+
+        "success"
+
+    );
+
+}
+
+/* ======================================================
+   폼 저장 처리
+====================================================== */
+
+function handleWeightFormSubmit(event) {
+
+    if(weightState.editingId) {
+
+        updateWeightRecord(event);
+
+        return;
+
+    }
+
+    saveWeightRecord(event);
 
 }
 
@@ -1295,117 +1278,37 @@ function calculateBMI(height,weight){
    폼 초기화
 ====================================================== */
 
-function resetAthleteForm(){
+function resetWeightForm() {
 
-    const e=getAthleteFormElements();
+    const elements =
+        getWeightElements();
 
-    e.form?.reset();
+    elements.form?.reset();
 
-    editingAthleteId=null;
+    weightState.editingId =
+        null;
 
-    if(e.submit){
+    initializeWeightDate();
 
-        e.submit.textContent="선수 등록";
+    initializeWeightBodyPartOptions();
 
-    }
+    updateExerciseOptions();
 
-}
+    if(elements.submit) {
 
-/* ======================================================
-   선수 등록
-====================================================== */
-
-function addAthlete(event){
-
-    event?.preventDefault();
-
-    const athlete=getAthleteFormData();
-
-    if(!validateAthleteData(athlete)){
-
-        return;
+        elements.submit.textContent =
+            "기록 저장";
 
     }
 
-    const duplicated=
+    if(elements.cancel) {
 
-        athlete.studentNumber &&
-
-        appData.athletes.some(
-
-            item=>
-
-            item.studentNumber===
-
-            athlete.studentNumber
-
-        );
-
-    if(duplicated){
-
-        showToast(
-
-            "이미 등록된 학번입니다.",
-
-            "error"
-
-        );
-
-        return;
+        elements.cancel.hidden =
+            true;
 
     }
 
-    const newAthlete={
-
-        id:createId("athlete"),
-
-        ...athlete,
-
-        bmi:calculateBMI(
-
-            athlete.height,
-
-            athlete.weight
-
-        ),
-
-        createdAt:new Date().toISOString(),
-
-        updatedAt:new Date().toISOString()
-
-    };
-
-    appData.athletes.unshift(
-
-        newAthlete
-
-    );
-
-    if(!appData.selectedAthleteId){
-
-        appData.selectedAthleteId=
-
-            newAthlete.id;
-
-    }
-
-    autoSave();
-
-    renderAthleteList();
-
-    renderDashboard();
-
-    updateSelectedAthleteDisplay();
-
-    resetAthleteForm();
-
-    showToast(
-
-        `${newAthlete.name} 등록 완료`,
-
-        "success"
-
-    );
+    updateWeightPreview();
 
 }
 
@@ -1413,141 +1316,25 @@ function addAthlete(event){
    수정 시작
 ====================================================== */
 
-function startEditAthlete(id){
+function startEditWeightRecord(id) {
 
-    const athlete=
+    const records =
+        ensureWeightDataStore();
 
-        appData.athletes.find(
+    const record =
+        records.find(
 
-            a=>a.id===id
+            item =>
 
-        );
-
-    if(!athlete){
-
-        return;
-
-    }
-
-    editingAthleteId=id;
-
-    const e=getAthleteFormElements();
-
-    e.name.value=athlete.name;
-
-    e.studentNumber.value=
-
-        athlete.studentNumber;
-
-    e.grade.value=athlete.grade;
-
-    e.classNumber.value=
-
-        athlete.classNumber;
-
-    e.sport.value=
-
-        athlete.sport;
-
-    e.gender.value=
-
-        athlete.gender;
-
-    e.birthDate.value=
-
-        athlete.birthDate;
-
-    e.height.value=
-
-        athlete.height;
-
-    e.weight.value=
-
-        athlete.weight;
-
-    e.memo.value=
-
-        athlete.memo;
-
-    if(e.submit){
-
-        e.submit.textContent=
-
-            "선수 수정";
-
-    }
-
-    e.name.focus();
-
-    showToast(
-
-        "선수 정보를 수정하세요."
-
-    );
-
-}
-/* ======================================================
-   app.js Part 2-2
-   선수 수정 / 삭제 / 선택
-====================================================== */
-
-/* ======================================================
-   선수 수정 저장
-====================================================== */
-
-function updateAthlete(event){
-
-    event?.preventDefault();
-
-    if(!editingAthleteId){
-
-        addAthlete(event);
-
-        return;
-
-    }
-
-    const data = getAthleteFormData();
-
-    if(!validateAthleteData(data)){
-
-        return;
-
-    }
-
-    const index = appData.athletes.findIndex(
-
-        athlete => athlete.id === editingAthleteId
-
-    );
-
-    if(index === -1){
-
-        editingAthleteId = null;
-
-        return;
-
-    }
-
-    const duplicated =
-
-        data.studentNumber &&
-
-        appData.athletes.some(
-
-            athlete =>
-
-                athlete.id !== editingAthleteId &&
-
-                athlete.studentNumber === data.studentNumber
+                item.id === id
 
         );
 
-    if(duplicated){
+    if(!record) {
 
-        showToast(
+        weightShowToast(
 
-            "같은 학번이 이미 존재합니다.",
+            "기록을 찾을 수 없습니다.",
 
             "error"
 
@@ -1557,193 +1344,250 @@ function updateAthlete(event){
 
     }
 
-    appData.athletes[index] = {
+    const normalizedRecord =
+        normalizeWeightRecord(record);
 
-        ...appData.athletes[index],
+    const elements =
+        getWeightElements();
 
-        ...data,
+    weightState.editingId =
+        normalizedRecord.id;
 
-        bmi:calculateBMI(
+    if(elements.date) {
 
-            data.height,
-
-            data.weight
-
-        ),
-
-        updatedAt:new Date().toISOString()
-
-    };
-
-    autoSave();
-
-    renderAthleteList();
-
-    renderDashboard();
-
-    updateSelectedAthleteDisplay();
-
-    resetAthleteForm();
-
-    showToast(
-
-        "선수 정보를 수정했습니다.",
-
-        "success"
-
-    );
-
-}
-
-/* ======================================================
-   선수 선택
-====================================================== */
-
-function selectAthlete(id){
-
-    const athlete =
-
-        appData.athletes.find(
-
-            item => item.id === id
-
-        );
-
-    if(!athlete){
-
-        return;
+        elements.date.value =
+            normalizedRecord.date || "";
 
     }
 
-    appData.selectedAthleteId = id;
+    if(elements.bodyPart) {
 
-    autoSave();
-
-    renderAthleteList();
-
-    renderDashboard();
-
-    updateSelectedAthleteDisplay();
-
-    window.renderSportsPage?.();
-
-    window.renderWeightPage?.();
-
-    window.renderPosePage?.();
-
-    window.renderRecordsPage?.();
-
-    window.renderReportPage?.();
-
-    showToast(
-
-        `${athlete.name} 선택 완료`,
-
-        "success"
-
-    );
-
-}
-
-/* ======================================================
-   삭제 요청
-====================================================== */
-
-function requestDeleteAthlete(id){
-
-    const athlete =
-
-        appData.athletes.find(
-
-            item => item.id === id
-
-        );
-
-    if(!athlete){
-
-        return;
+        elements.bodyPart.value =
+            normalizedRecord.bodyPart || "";
 
     }
 
-    openConfirmModal({
+    updateExerciseOptions(
 
-        title:"선수 삭제",
+        normalizedRecord.exercise
 
-        message:
+    );
 
-        `${athlete.name} 선수와 모든 기록을 삭제하시겠습니까?`,
+    if(elements.exercise) {
 
-        confirmText:"삭제",
+        elements.exercise.value =
+            normalizedRecord.exercise || "";
 
-        onConfirm:()=>{
+    }
 
-            deleteAthlete(id);
+    if(elements.weight) {
 
-        }
+        elements.weight.value =
+            normalizedRecord.weight || "";
+
+    }
+
+    if(elements.reps) {
+
+        elements.reps.value =
+            normalizedRecord.reps || "";
+
+    }
+
+    if(elements.sets) {
+
+        elements.sets.value =
+            normalizedRecord.sets || "";
+
+    }
+
+    if(elements.rpe) {
+
+        elements.rpe.value =
+            normalizedRecord.rpe || "";
+
+    }
+
+    if(elements.memo) {
+
+        elements.memo.value =
+            normalizedRecord.memo || "";
+
+    }
+
+    if(elements.submit) {
+
+        elements.submit.textContent =
+            "기록 수정";
+
+    }
+
+    if(elements.cancel) {
+
+        elements.cancel.hidden =
+            false;
+
+    }
+
+    updateWeightPreview();
+
+    elements.weight?.focus();
+
+    elements.form?.scrollIntoView({
+
+        behavior:
+            "smooth",
+
+        block:
+            "start"
 
     });
 
 }
 
 /* ======================================================
-   선수 삭제
+   수정 취소
 ====================================================== */
 
-function deleteAthlete(id){
+function cancelWeightEdit(event) {
 
-    appData.athletes =
+    event?.preventDefault();
 
-        appData.athletes.filter(
+    resetWeightForm();
 
-            athlete => athlete.id !== id
+    weightShowToast(
+
+        "수정을 취소했습니다.",
+
+        "info"
+
+    );
+
+}
+
+/* ======================================================
+   삭제 확인
+====================================================== */
+
+function requestDeleteWeightRecord(id) {
+
+    const records =
+        ensureWeightDataStore();
+
+    const record =
+        records.find(
+
+            item =>
+
+                item.id === id
 
         );
 
-    appData.sportsRecords =
+    if(!record) {
 
-        appData.sportsRecords.filter(
+        weightShowToast(
 
-            record => record.athleteId !== id
+            "삭제할 기록을 찾을 수 없습니다.",
 
-        );
-
-    appData.weightRecords =
-
-        appData.weightRecords.filter(
-
-            record => record.athleteId !== id
+            "error"
 
         );
 
-    appData.poseRecords =
-
-        appData.poseRecords.filter(
-
-            record => record.athleteId !== id
-
-        );
-
-    if(appData.selectedAthleteId === id){
-
-        appData.selectedAthleteId =
-
-            appData.athletes[0]?.id ||
-
-            null;
+        return;
 
     }
 
-    autoSave();
+    const message =
 
-    renderAthleteList();
+        `${record.exercise || "운동"} 기록을 삭제하시겠습니까?`;
 
-    renderDashboard();
+    if(typeof openConfirmModal === "function") {
 
-    updateSelectedAthleteDisplay();
+        openConfirmModal({
 
-    showToast(
+            title:
+                "기록 삭제",
 
-        "선수를 삭제했습니다.",
+            message,
+
+            confirmText:
+                "삭제",
+
+            cancelText:
+                "취소",
+
+            onConfirm() {
+
+                deleteWeightRecord(id);
+
+            }
+
+        });
+
+        return;
+
+    }
+
+    const confirmed =
+        window.confirm(message);
+
+    if(confirmed) {
+
+        deleteWeightRecord(id);
+
+    }
+
+}
+
+/* ======================================================
+   기록 삭제
+====================================================== */
+
+function deleteWeightRecord(id) {
+
+    const records =
+        ensureWeightDataStore();
+
+    const index =
+        records.findIndex(
+
+            record =>
+
+                record.id === id
+
+        );
+
+    if(index === -1) {
+
+        weightShowToast(
+
+            "삭제할 기록을 찾을 수 없습니다.",
+
+            "error"
+
+        );
+
+        return;
+
+    }
+
+    records.splice(index, 1);
+
+    if(weightState.editingId === id) {
+
+        resetWeightForm();
+
+    }
+
+    weightAutoSave();
+
+    refreshWeightPage();
+
+    weightRenderDashboard();
+
+    weightShowToast(
+
+        "웨이트 기록을 삭제했습니다.",
 
         "success"
 
@@ -1752,316 +1596,1004 @@ function deleteAthlete(id){
 }
 
 /* ======================================================
-   선수 카드 생성
+   모든 기록 삭제
 ====================================================== */
 
-function createAthleteCardHTML(athlete){
+function requestDeleteAllWeightRecords() {
 
-    const selected =
+    const athlete =
+        requireWeightAthlete();
 
-        athlete.id ===
+    if(!athlete) {
 
-        appData.selectedAthleteId;
-
-    return `
-
-<article class="athlete-card ${selected?"selected":""}">
-
-<div class="athlete-header">
-
-<div class="athlete-avatar">
-
-${escapeHTML(
-
-athlete.name.charAt(0)
-
-)}
-
-</div>
-
-<div>
-
-<h3>
-
-${escapeHTML(
-
-athlete.name
-
-)}
-
-</h3>
-
-<p>
-
-${escapeHTML(
-
-athlete.sport||"-"
-
-)}
-
-</p>
-
-</div>
-
-</div>
-
-<div class="athlete-info">
-
-<p><strong>학번</strong> ${escapeHTML(athlete.studentNumber||"-")}</p>
-
-<p><strong>키</strong> ${athlete.height||"-"} cm</p>
-
-<p><strong>몸무게</strong> ${athlete.weight||"-"} kg</p>
-
-<p><strong>BMI</strong> ${athlete.bmi||"-"}</p>
-
-</div>
-
-<div class="athlete-buttons">
-
-<button
-
-data-action="select"
-
-data-id="${athlete.id}"
-
->
-
-${selected?"선택됨":"선택"}
-
-</button>
-
-<button
-
-data-action="edit"
-
-data-id="${athlete.id}"
-
->
-
-수정
-
-</button>
-
-<button
-
-class="danger"
-
-data-action="delete"
-
-data-id="${athlete.id}"
-
->
-
-삭제
-
-</button>
-
-</div>
-
-</article>
-
-`;
-
-}
-/* ======================================================
-   app.js Part 2-3
-   선수 목록 / 검색 / 이벤트 / Dashboard 연동
-====================================================== */
-
-/* ======================================================
-   선수 검색
-====================================================== */
-
-function searchAthletes(keyword = ""){
-
-    const text = keyword
-        .trim()
-        .toLowerCase();
-
-    if(!text){
-
-        return [...appData.athletes];
+        return;
 
     }
 
-    return appData.athletes.filter(
+    const records =
+        getCurrentWeightRecords();
 
-        athlete=>{
+    if(records.length === 0) {
 
-            return(
+        weightShowToast(
 
-                athlete.name
-                    ?.toLowerCase()
-                    .includes(text)
+            "삭제할 기록이 없습니다.",
 
-                ||
+            "info"
 
-                athlete.studentNumber
-                    ?.toLowerCase()
-                    .includes(text)
+        );
 
-                ||
+        return;
 
-                athlete.sport
-                    ?.toLowerCase()
-                    .includes(text)
+    }
 
-            );
+    const message =
 
-        }
+        `${athlete.name || "선수"}의 웨이트 기록 ${records.length}개를 모두 삭제하시겠습니까?`;
+
+    if(typeof openConfirmModal === "function") {
+
+        openConfirmModal({
+
+            title:
+                "전체 기록 삭제",
+
+            message,
+
+            confirmText:
+                "전체 삭제",
+
+            cancelText:
+                "취소",
+
+            onConfirm() {
+
+                deleteAllWeightRecords();
+
+            }
+
+        });
+
+        return;
+
+    }
+
+    if(window.confirm(message)) {
+
+        deleteAllWeightRecords();
+
+    }
+
+}
+
+/* ======================================================
+   선택 선수 전체 기록 삭제
+====================================================== */
+
+function deleteAllWeightRecords() {
+
+    const athlete =
+        getWeightSelectedAthlete();
+
+    if(!athlete) {
+
+        return;
+
+    }
+
+    const records =
+        ensureWeightDataStore();
+
+    window.appData.weightRecords =
+
+        records.filter(
+
+            record =>
+
+                record.athleteId !==
+
+                athlete.id
+
+        );
+
+    resetWeightForm();
+
+    weightAutoSave();
+
+    refreshWeightPage();
+
+    weightRenderDashboard();
+
+    weightShowToast(
+
+        "선택한 선수의 웨이트 기록을 모두 삭제했습니다.",
+
+        "success"
 
     );
 
 }
 
 /* ======================================================
-   선수 필터
+   입력 이벤트 초기화
 ====================================================== */
 
-function filterAthletes(){
+function initializeWeightInputs() {
+
+    const elements =
+        getWeightElements();
+
+    elements.bodyPart?.addEventListener(
+
+        "change",
+
+        () => {
+
+            updateExerciseOptions();
+
+            updateWeightPreview();
+
+        }
+
+    );
+
+    [
+
+        elements.weight,
+
+        elements.reps,
+
+        elements.sets
+
+    ].forEach(input => {
+
+        input?.addEventListener(
+
+            "input",
+
+            updateWeightPreview
+
+        );
+
+    });
+
+}
+
+/* ======================================================
+   기록 데이터 보정
+====================================================== */
+
+function normalizeAllWeightRecords() {
+
+    const records =
+        ensureWeightDataStore();
+
+    window.appData.weightRecords =
+
+        records.map(record => {
+
+            const normalized =
+                normalizeWeightRecord(record);
+
+            return {
+
+                id:
+                    normalized.id ||
+
+                    weightCreateId("weight"),
+
+                athleteId:
+                    normalized.athleteId ||
+
+                    "",
+
+                athleteName:
+                    normalized.athleteName ||
+
+                    "",
+
+                date:
+                    normalized.date ||
+
+                    weightGetTodayValue(),
+
+                bodyPart:
+                    normalized.bodyPart,
+
+                exercise:
+                    normalized.exercise,
+
+                weight:
+                    normalized.weight,
+
+                reps:
+                    normalized.reps,
+
+                sets:
+                    normalized.sets,
+
+                rpe:
+                    normalized.rpe,
+
+                memo:
+                    normalized.memo,
+
+                oneRM:
+                    normalized.oneRM,
+
+                volume:
+                    normalized.volume,
+
+                intensity:
+                    normalized.intensity,
+
+                createdAt:
+                    normalized.createdAt ||
+
+                    new Date().toISOString(),
+
+                updatedAt:
+                    normalized.updatedAt ||
+
+                    new Date().toISOString()
+
+            };
+
+        });
+
+}
+/* ======================================================
+   weight.js Part 2-1
+   Records / Search / Filter / Sort / Pagination
+====================================================== */
+
+/* ======================================================
+   현재 선수 기록
+====================================================== */
+
+function getCurrentWeightRecords() {
+
+    const athlete =
+        getWeightSelectedAthlete();
+
+    if(!athlete) {
+
+        return [];
+
+    }
+
+    const records =
+        ensureWeightDataStore();
+
+    return records
+
+        .filter(record => {
+
+            return (
+
+                String(record.athleteId) ===
+
+                String(athlete.id)
+
+            );
+
+        })
+
+        .map(normalizeWeightRecord);
+
+}
+
+/* ======================================================
+   검색
+====================================================== */
+
+function searchWeightRecords(records) {
 
     const keyword =
 
-        $("#athleteSearch")
+        String(
 
-        ?.value || "";
-
-    const sport =
-
-        $("#athleteSportFilter")
-
-        ?.value || "";
-
-    let athletes =
-
-        searchAthletes(keyword);
-
-    if(sport){
-
-        athletes = athletes.filter(
-
-            athlete=>
-
-            athlete.sport===sport
-
-        );
-
-    }
-
-    return athletes;
-
-}
-
-/* ======================================================
-   선수 목록 출력
-====================================================== */
-
-function renderAthleteList(){
-
-    const list =
-
-        $("#athleteList") ||
-
-        $(".athlete-list");
-
-    if(!list){
-
-        return;
-
-    }
-
-    const athletes =
-
-        filterAthletes();
-
-    if(athletes.length===0){
-
-        list.innerHTML=`
-
-<div class="empty-box">
-
-<div class="empty-icon">
-
-👤
-
-</div>
-
-<p>
-
-등록된 선수가 없습니다.
-
-</p>
-
-</div>
-
-`;
-
-        return;
-
-    }
-
-    list.innerHTML=
-
-        athletes
-
-        .map(
-
-            createAthleteCardHTML
+            weightState.searchKeyword || ""
 
         )
 
-        .join("");
+        .trim()
+
+        .toLowerCase();
+
+    if(!keyword) {
+
+        return records;
+
+    }
+
+    return records.filter(record => {
+
+        const exercise =
+
+            String(record.exercise || "")
+
+            .toLowerCase();
+
+        const bodyPart =
+
+            String(record.bodyPart || "")
+
+            .toLowerCase();
+
+        const memo =
+
+            String(record.memo || "")
+
+            .toLowerCase();
+
+        const date =
+
+            String(record.date || "")
+
+            .toLowerCase();
+
+        return (
+
+            exercise.includes(keyword) ||
+
+            bodyPart.includes(keyword) ||
+
+            memo.includes(keyword) ||
+
+            date.includes(keyword)
+
+        );
+
+    });
 
 }
 
 /* ======================================================
-   카드 버튼 이벤트
+   운동 부위 필터
 ====================================================== */
 
-function handleAthleteListClick(event){
+function filterWeightRecordsByBodyPart(records) {
 
-    const button=
+    const bodyPart =
 
-        event.target.closest(
+        weightState.selectedBodyPart;
 
-            "[data-action]"
+    if(!bodyPart) {
+
+        return records;
+
+    }
+
+    return records.filter(record => {
+
+        return (
+
+            record.bodyPart ===
+
+            bodyPart
 
         );
 
-    if(!button){
+    });
+
+}
+
+/* ======================================================
+   운동 필터
+====================================================== */
+
+function filterWeightRecordsByExercise(records) {
+
+    const exercise =
+
+        weightState.selectedExercise;
+
+    if(!exercise) {
+
+        return records;
+
+    }
+
+    return records.filter(record => {
+
+        return (
+
+            record.exercise ===
+
+            exercise
+
+        );
+
+    });
+
+}
+
+/* ======================================================
+   날짜 시간값
+====================================================== */
+
+function getWeightDateTime(record) {
+
+    const value =
+
+        record?.date ||
+
+        record?.createdAt ||
+
+        "";
+
+    const time =
+
+        new Date(value).getTime();
+
+    return Number.isNaN(time)
+
+        ? 0
+
+        : time;
+
+}
+
+/* ======================================================
+   정렬
+====================================================== */
+
+function sortWeightRecords(records) {
+
+    const sorted =
+
+        [...records];
+
+    switch(weightState.sortType) {
+
+        case "date-asc":
+
+            return sorted.sort(
+
+                (a, b) =>
+
+                    getWeightDateTime(a) -
+
+                    getWeightDateTime(b)
+
+            );
+
+        case "weight-desc":
+
+            return sorted.sort(
+
+                (a, b) =>
+
+                    b.weight -
+
+                    a.weight
+
+            );
+
+        case "weight-asc":
+
+            return sorted.sort(
+
+                (a, b) =>
+
+                    a.weight -
+
+                    b.weight
+
+            );
+
+        case "volume-desc":
+
+            return sorted.sort(
+
+                (a, b) =>
+
+                    b.volume -
+
+                    a.volume
+
+            );
+
+        case "volume-asc":
+
+            return sorted.sort(
+
+                (a, b) =>
+
+                    a.volume -
+
+                    b.volume
+
+            );
+
+        case "onerm-desc":
+
+            return sorted.sort(
+
+                (a, b) =>
+
+                    b.oneRM -
+
+                    a.oneRM
+
+            );
+
+        case "onerm-asc":
+
+            return sorted.sort(
+
+                (a, b) =>
+
+                    a.oneRM -
+
+                    b.oneRM
+
+            );
+
+        case "rpe-desc":
+
+            return sorted.sort(
+
+                (a, b) =>
+
+                    b.rpe -
+
+                    a.rpe
+
+            );
+
+        case "rpe-asc":
+
+            return sorted.sort(
+
+                (a, b) =>
+
+                    a.rpe -
+
+                    b.rpe
+
+            );
+
+        case "exercise-asc":
+
+            return sorted.sort(
+
+                (a, b) =>
+
+                    String(a.exercise)
+
+                    .localeCompare(
+
+                        String(b.exercise),
+
+                        "ko"
+
+                    )
+
+            );
+
+        case "date-desc":
+
+        default:
+
+            return sorted.sort(
+
+                (a, b) => {
+
+                    const dateDifference =
+
+                        getWeightDateTime(b) -
+
+                        getWeightDateTime(a);
+
+                    if(dateDifference !== 0) {
+
+                        return dateDifference;
+
+                    }
+
+                    return String(
+
+                        b.createdAt || ""
+
+                    ).localeCompare(
+
+                        String(
+
+                            a.createdAt || ""
+
+                        )
+
+                    );
+
+                }
+
+            );
+
+    }
+
+}
+
+/* ======================================================
+   모든 검색/필터/정렬 적용
+====================================================== */
+
+function getFilteredWeightRecords() {
+
+    let records =
+
+        getCurrentWeightRecords();
+
+    records =
+
+        searchWeightRecords(records);
+
+    records =
+
+        filterWeightRecordsByBodyPart(records);
+
+    records =
+
+        filterWeightRecordsByExercise(records);
+
+    records =
+
+        sortWeightRecords(records);
+
+    return records;
+
+}
+
+/* ======================================================
+   총 페이지 수
+====================================================== */
+
+function getWeightTotalPages(records = null) {
+
+    const targetRecords =
+
+        records ||
+
+        getFilteredWeightRecords();
+
+    const pageSize =
+
+        Math.max(
+
+            1,
+
+            weightToNumber(
+
+                weightState.pageSize
+
+            ) || 10
+
+        );
+
+    return Math.max(
+
+        1,
+
+        Math.ceil(
+
+            targetRecords.length /
+
+            pageSize
+
+        )
+
+    );
+
+}
+
+/* ======================================================
+   현재 페이지 보정
+====================================================== */
+
+function normalizeWeightPage(records = null) {
+
+    const totalPages =
+
+        getWeightTotalPages(records);
+
+    if(weightState.page < 1) {
+
+        weightState.page = 1;
+
+    }
+
+    if(weightState.page > totalPages) {
+
+        weightState.page = totalPages;
+
+    }
+
+    return weightState.page;
+
+}
+
+/* ======================================================
+   현재 페이지 기록
+====================================================== */
+
+function getPaginatedWeightRecords(records = null) {
+
+    const targetRecords =
+
+        records ||
+
+        getFilteredWeightRecords();
+
+    normalizeWeightPage(targetRecords);
+
+    const pageSize =
+
+        Math.max(
+
+            1,
+
+            weightToNumber(
+
+                weightState.pageSize
+
+            ) || 10
+
+        );
+
+    const start =
+
+        (
+
+            weightState.page - 1
+
+        ) * pageSize;
+
+    const end =
+
+        start + pageSize;
+
+    return targetRecords.slice(
+
+        start,
+
+        end
+
+    );
+
+}
+
+/* ======================================================
+   검색 상태 초기화
+====================================================== */
+
+function resetWeightFilters() {
+
+    const elements =
+
+        getWeightElements();
+
+    weightState.searchKeyword =
+        "";
+
+    weightState.selectedBodyPart =
+        "";
+
+    weightState.selectedExercise =
+        "";
+
+    weightState.sortType =
+        "date-desc";
+
+    weightState.page =
+        1;
+
+    if(elements.search) {
+
+        elements.search.value =
+            "";
+
+    }
+
+    if(elements.bodyPartFilter) {
+
+        elements.bodyPartFilter.value =
+            "";
+
+    }
+
+    if(elements.exerciseFilter) {
+
+        elements.exerciseFilter.value =
+            "";
+
+    }
+
+    if(elements.sort) {
+
+        elements.sort.value =
+            "date-desc";
+
+    }
+
+    renderWeightPage();
+
+}
+
+/* ======================================================
+   필터용 부위 옵션
+====================================================== */
+
+function initializeWeightFilterOptions() {
+
+    const elements =
+
+        getWeightElements();
+
+    if(!elements.bodyPartFilter) {
 
         return;
 
     }
 
-    const action=
+    const currentValue =
 
-        button.dataset.action;
+        weightState.selectedBodyPart ||
 
-    const id=
+        elements.bodyPartFilter.value;
 
-        button.dataset.id;
+    elements.bodyPartFilter.innerHTML =
 
-    switch(action){
+        `<option value="">전체 부위</option>`;
 
-        case "select":
+    BODY_PARTS.forEach(bodyPart => {
 
-            selectAthlete(id);
+        elements.bodyPartFilter
 
-            break;
+            .insertAdjacentHTML(
 
-        case "edit":
+                "beforeend",
 
-            startEditAthlete(id);
+                `<option value="${weightEscapeHTML(bodyPart)}">
+                    ${weightEscapeHTML(bodyPart)}
+                </option>`
 
-            break;
+            );
 
-        case "delete":
+    });
 
-            requestDeleteAthlete(id);
+    if(BODY_PARTS.includes(currentValue)) {
 
-            break;
+        elements.bodyPartFilter.value =
+
+            currentValue;
+
+    }
+
+}
+
+/* ======================================================
+   필터용 운동 목록
+====================================================== */
+
+function getAvailableWeightExercises() {
+
+    const records =
+
+        getCurrentWeightRecords();
+
+    const exerciseSet =
+
+        new Set();
+
+    records.forEach(record => {
+
+        if(record.exercise) {
+
+            exerciseSet.add(
+
+                record.exercise
+
+            );
+
+        }
+
+    });
+
+    if(weightState.selectedBodyPart) {
+
+        const bodyPartExercises =
+
+            EXERCISE_LIST[
+
+                weightState.selectedBodyPart
+
+            ] || [];
+
+        bodyPartExercises.forEach(
+
+            exercise =>
+
+                exerciseSet.add(exercise)
+
+        );
+
+    }
+
+    return [...exerciseSet]
+
+        .sort(
+
+            (a, b) =>
+
+                String(a).localeCompare(
+
+                    String(b),
+
+                    "ko"
+
+                )
+
+        );
+
+}
+
+/* ======================================================
+   운동 필터 옵션 갱신
+====================================================== */
+
+function updateWeightExerciseFilterOptions() {
+
+    const elements =
+
+        getWeightElements();
+
+    if(!elements.exerciseFilter) {
+
+        return;
+
+    }
+
+    const previousValue =
+
+        weightState.selectedExercise ||
+
+        elements.exerciseFilter.value;
+
+    const exercises =
+
+        getAvailableWeightExercises();
+
+    elements.exerciseFilter.innerHTML =
+
+        `<option value="">전체 운동</option>`;
+
+    exercises.forEach(exercise => {
+
+        elements.exerciseFilter
+
+            .insertAdjacentHTML(
+
+                "beforeend",
+
+                `<option value="${weightEscapeHTML(exercise)}">
+                    ${weightEscapeHTML(exercise)}
+                </option>`
+
+            );
+
+    });
+
+    if(exercises.includes(previousValue)) {
+
+        elements.exerciseFilter.value =
+
+            previousValue;
+
+    } else {
+
+        weightState.selectedExercise =
+            "";
 
     }
 
@@ -2071,630 +2603,4463 @@ function handleAthleteListClick(event){
    검색 이벤트
 ====================================================== */
 
-function initializeAthleteSearch(){
+function initializeWeightSearch() {
 
-    $("#athleteSearch")
+    const elements =
 
-    ?.addEventListener(
+        getWeightElements();
+
+    elements.search?.addEventListener(
 
         "input",
 
-        renderAthleteList
+        event => {
+
+            weightState.searchKeyword =
+
+                event.target.value;
+
+            weightState.page = 1;
+
+            renderWeightPage();
+
+        }
 
     );
 
-    $("#athleteSportFilter")
+}
 
-    ?.addEventListener(
+/* ======================================================
+   부위 필터 이벤트
+====================================================== */
+
+function initializeWeightFilter() {
+
+    const elements =
+
+        getWeightElements();
+
+    elements.bodyPartFilter
+
+        ?.addEventListener(
+
+            "change",
+
+            event => {
+
+                weightState.selectedBodyPart =
+
+                    event.target.value;
+
+                weightState.selectedExercise =
+                    "";
+
+                weightState.page =
+                    1;
+
+                updateWeightExerciseFilterOptions();
+
+                renderWeightPage();
+
+            }
+
+        );
+
+}
+
+/* ======================================================
+   운동 필터 이벤트
+====================================================== */
+
+function initializeWeightExerciseFilter() {
+
+    const elements =
+
+        getWeightElements();
+
+    elements.exerciseFilter
+
+        ?.addEventListener(
+
+            "change",
+
+            event => {
+
+                weightState.selectedExercise =
+
+                    event.target.value;
+
+                weightState.page =
+                    1;
+
+                renderWeightPage();
+
+            }
+
+        );
+
+}
+
+/* ======================================================
+   정렬 이벤트
+====================================================== */
+
+function initializeWeightSort() {
+
+    const elements =
+
+        getWeightElements();
+
+    elements.sort?.addEventListener(
 
         "change",
 
-        renderAthleteList
+        event => {
+
+            weightState.sortType =
+
+                event.target.value ||
+
+                "date-desc";
+
+            weightState.page =
+                1;
+
+            renderWeightPage();
+
+        }
 
     );
 
 }
 
 /* ======================================================
-   Dashboard 선수 정보
+   이전 페이지
 ====================================================== */
 
-function updateDashboardAthlete(){
+function goToPreviousWeightPage() {
 
-    const athlete=
-
-        getSelectedAthlete();
-
-    const name=
-
-        $("#dashboardSelectedAthlete");
-
-    const info=
-
-        $("#dashboardAthleteInfo");
-
-    if(!athlete){
-
-        if(name){
-
-            name.textContent=
-
-                "선수 미선택";
-
-        }
-
-        if(info){
-
-            info.textContent=
-
-                "선수를 등록하세요.";
-
-        }
+    if(weightState.page <= 1) {
 
         return;
 
     }
 
-    if(name){
+    weightState.page -= 1;
 
-        name.textContent=
-
-            athlete.name;
-
-    }
-
-    if(info){
-
-        info.textContent=
-
-`${athlete.grade || "-"}학년 · ${athlete.sport || "-"}`;
-
-    }
+    renderWeightPage();
 
 }
 
 /* ======================================================
-   Dashboard 통계
+   다음 페이지
 ====================================================== */
 
-function updateDashboardStatistics(){
+function goToNextWeightPage() {
 
-    const stats={
+    const totalPages =
 
-        totalAthletes:
+        getWeightTotalPages();
 
-            appData.athletes.length,
-
-        sports:
-
-            appData.sportsRecords.length,
-
-        weight:
-
-            appData.weightRecords.length,
-
-        pose:
-
-            appData.poseRecords.length
-
-    };
-
-    Object.entries(stats)
-
-    .forEach(
-
-        ([key,value])=>{
-
-            $$(`[data-stat="${key}"]`)
-
-            .forEach(el=>{
-
-                el.textContent=value;
-
-            });
-
-        }
-
-    );
-
-}
-
-/* ======================================================
-   Dashboard 렌더링
-====================================================== */
-
-function renderDashboard(){
-
-    updateDashboardAthlete();
-
-    updateDashboardStatistics();
-
-    if(
-
-        typeof renderRecentRecords===
-
-        "function"
-
-    ){
-
-        renderRecentRecords();
-
-    }
-
-    if(
-
-        typeof renderDashboardCharts===
-
-        "function"
-
-    ){
-
-        renderDashboardCharts();
-
-    }
-
-}
-
-/* ======================================================
-   선수 기능 초기화
-====================================================== */
-
-function initializeAthleteModule(){
-
-    const form=
-
-        $("#athleteForm");
-
-    form?.addEventListener(
-
-        "submit",
-
-        event=>{
-
-            if(editingAthleteId){
-
-                updateAthlete(event);
-
-            }
-
-            else{
-
-                addAthlete(event);
-
-            }
-
-        }
-
-    );
-
-    $("#cancelAthleteEditButton")
-
-    ?.addEventListener(
-
-        "click",
-
-        cancelAthleteEdit
-
-    );
-
-    $("#athleteList")
-
-    ?.addEventListener(
-
-        "click",
-
-        handleAthleteListClick
-
-    );
-
-    initializeAthleteSearch();
-
-    renderAthleteList();
-
-    renderDashboard();
-
-}
-
-/* ======================================================
-   DOM Ready
-====================================================== */
-
-document.addEventListener(
-
-    "DOMContentLoaded",
-
-    initializeAthleteModule
-
-);
-
-/* ======================================================
-   Export
-====================================================== */
-
-window.renderAthleteList =
-    renderAthleteList;
-
-window.renderDashboard =
-    renderDashboard;
-
-window.selectAthlete =
-    selectAthlete;
-
-window.addAthlete =
-    addAthlete;
-
-window.updateAthlete =
-    updateAthlete;
-
-window.deleteAthlete =
-    deleteAthlete;
-
-window.requestDeleteAthlete =
-    requestDeleteAthlete;
-
-window.startEditAthlete =
-    startEditAthlete;
-
-window.calculateBMI =
-    calculateBMI;
-
-window.searchAthletes =
-    searchAthletes;
-    /* ======================================================
-   app.js Part 3-1
-   Dashboard 통계 / 최근 기록 / Chart.js
-====================================================== */
-
-"use strict";
-
-/* ======================================================
-   차트 객체
-====================================================== */
-
-const dashboardCharts = {
-    monthly: null,
-    training: null
-};
-
-/* ======================================================
-   최근 기록 가져오기
-====================================================== */
-
-function getRecentRecords(limit = 5) {
-
-    const records = [
-
-        ...appData.sportsRecords.map(item => ({
-            ...item,
-            type: "종목훈련"
-        })),
-
-        ...appData.weightRecords.map(item => ({
-            ...item,
-            type: "웨이트"
-        })),
-
-        ...appData.poseRecords.map(item => ({
-            ...item,
-            type: "AI 자세"
-        }))
-
-    ];
-
-    return records
-        .sort((a, b) => {
-
-            const timeA = new Date(
-                a.createdAt || a.date || 0
-            ).getTime();
-
-            const timeB = new Date(
-                b.createdAt || b.date || 0
-            ).getTime();
-
-            return timeB - timeA;
-
-        })
-        .slice(0, limit);
-
-}
-
-/* ======================================================
-   최근 기록 출력
-====================================================== */
-
-function renderRecentRecords() {
-
-    const container =
-        $("#recentTrainingList");
-
-    if (!container) return;
-
-    const records = getRecentRecords();
-
-    if (records.length === 0) {
-
-        container.innerHTML = `
-
-<div class="empty-box">
-
-📊
-
-<p>훈련 기록이 없습니다.</p>
-
-</div>
-
-`;
+    if(weightState.page >= totalPages) {
 
         return;
 
     }
 
-    container.innerHTML = records.map(record => {
+    weightState.page += 1;
 
-        const athlete = appData.athletes.find(
+    renderWeightPage();
 
-            a => a.id === record.athleteId
+}
+
+/* ======================================================
+   특정 페이지 이동
+====================================================== */
+
+function goToWeightPage(page) {
+
+    const totalPages =
+
+        getWeightTotalPages();
+
+    const nextPage =
+
+        Math.min(
+
+            totalPages,
+
+            Math.max(
+
+                1,
+
+                weightToNumber(page)
+
+            )
 
         );
 
-        return `
+    weightState.page =
 
-<div class="record-card">
+        nextPage;
 
-<div class="record-header">
+    renderWeightPage();
 
-<span class="badge blue">
+}
+/* ======================================================
+   weight.js Part 2-2
+   Card UI / Empty State / Pagination / Render
+====================================================== */
 
-${record.type}
+/* ======================================================
+   RPE 표시
+====================================================== */
 
-</span>
+function getWeightRPELabel(rpe) {
 
-<span>
+    const value =
+        weightToNumber(rpe);
 
-${formatDate(record.date)}
+    if(value <= 0) {
 
-</span>
+        return "-";
+
+    }
+
+    if(value <= 5) {
+
+        return `${value} · 여유`;
+
+    }
+
+    if(value <= 7) {
+
+        return `${value} · 보통`;
+
+    }
+
+    if(value <= 8) {
+
+        return `${value} · 높음`;
+
+    }
+
+    return `${value} · 매우 높음`;
+
+}
+
+/* ======================================================
+   강도 표시
+====================================================== */
+
+function getWeightIntensityLabel(intensity) {
+
+    const value =
+        weightToNumber(intensity);
+
+    if(value <= 0) {
+
+        return "-";
+
+    }
+
+    if(value < 60) {
+
+        return `${value}% · 가벼움`;
+
+    }
+
+    if(value < 75) {
+
+        return `${value}% · 중간`;
+
+    }
+
+    if(value < 90) {
+
+        return `${value}% · 높음`;
+
+    }
+
+    return `${value}% · 최대`;
+
+}
+
+/* ======================================================
+   카드 HTML
+====================================================== */
+
+function createWeightCardHTML(record) {
+
+    const safeRecord =
+        normalizeWeightRecord(record);
+
+    const memoHTML =
+        safeRecord.memo
+
+            ? `
+
+<div class="weight-card-memo">
+
+    <strong>메모</strong>
+
+    <p>
+        ${weightEscapeHTML(safeRecord.memo)}
+    </p>
 
 </div>
 
-<h4>
+`
 
-${escapeHTML(
+            : "";
 
-record.title ||
+    return `
 
-record.exercise ||
+<article
+    class="weight-card"
+    data-weight-record-id="${weightEscapeHTML(safeRecord.id)}"
+>
 
-record.type
+    <div class="weight-card-header">
 
-)}
+        <div>
 
-</h4>
+            <span class="weight-body-part-badge">
 
-<p>
+                ${weightEscapeHTML(safeRecord.bodyPart || "미분류")}
 
-${escapeHTML(
+            </span>
 
-athlete?.name ||
+            <h3>
 
-"선수 없음"
+                ${weightEscapeHTML(safeRecord.exercise || "운동")}
 
-)}
+            </h3>
 
-</p>
+        </div>
+
+        <time datetime="${weightEscapeHTML(safeRecord.date)}">
+
+            ${weightFormatDate(safeRecord.date)}
+
+        </time>
+
+    </div>
+
+    <div class="weight-card-main">
+
+        <div class="weight-main-value">
+
+            <span>중량</span>
+
+            <strong>
+
+                ${weightFormatNumber(safeRecord.weight)}
+                <small>kg</small>
+
+            </strong>
+
+        </div>
+
+        <div class="weight-main-value">
+
+            <span>반복</span>
+
+            <strong>
+
+                ${weightFormatNumber(safeRecord.reps)}
+                <small>회</small>
+
+            </strong>
+
+        </div>
+
+        <div class="weight-main-value">
+
+            <span>세트</span>
+
+            <strong>
+
+                ${weightFormatNumber(safeRecord.sets)}
+                <small>세트</small>
+
+            </strong>
+
+        </div>
+
+    </div>
+
+    <div class="weight-card-stat-grid">
+
+        <div class="weight-card-stat">
+
+            <span>예상 1RM</span>
+
+            <strong>
+
+                ${weightFormatNumber(safeRecord.oneRM)} kg
+
+            </strong>
+
+        </div>
+
+        <div class="weight-card-stat">
+
+            <span>총 볼륨</span>
+
+            <strong>
+
+                ${weightFormatNumber(safeRecord.volume)} kg
+
+            </strong>
+
+        </div>
+
+        <div class="weight-card-stat">
+
+            <span>강도</span>
+
+            <strong>
+
+                ${weightEscapeHTML(
+                    getWeightIntensityLabel(
+                        safeRecord.intensity
+                    )
+                )}
+
+            </strong>
+
+        </div>
+
+        <div class="weight-card-stat">
+
+            <span>RPE</span>
+
+            <strong>
+
+                ${weightEscapeHTML(
+                    getWeightRPELabel(
+                        safeRecord.rpe
+                    )
+                )}
+
+            </strong>
+
+        </div>
+
+    </div>
+
+    ${memoHTML}
+
+    <div class="weight-card-actions">
+
+        <button
+            type="button"
+            class="weight-edit-button"
+            data-action="edit-weight"
+            data-id="${weightEscapeHTML(safeRecord.id)}"
+        >
+
+            수정
+
+        </button>
+
+        <button
+            type="button"
+            class="weight-delete-button danger"
+            data-action="delete-weight"
+            data-id="${weightEscapeHTML(safeRecord.id)}"
+        >
+
+            삭제
+
+        </button>
+
+    </div>
+
+</article>
+
+`;
+
+}
+
+/* ======================================================
+   선수 미선택 화면
+====================================================== */
+
+function renderWeightAthleteRequired() {
+
+    const elements =
+        getWeightElements();
+
+    if(!elements.list) {
+
+        return;
+
+    }
+
+    elements.list.innerHTML = `
+
+<div class="empty-box weight-empty-box">
+
+    <div class="empty-icon">
+
+        👤
+
+    </div>
+
+    <h3>
+
+        선수를 먼저 선택하세요
+
+    </h3>
+
+    <p>
+
+        선수 선택 후 웨이트 기록을 확인하거나 저장할 수 있습니다.
+
+    </p>
 
 </div>
 
 `;
 
-    }).join("");
+}
+
+/* ======================================================
+   기본 빈 화면
+====================================================== */
+
+function renderEmptyWeight() {
+
+    const elements =
+        getWeightElements();
+
+    if(!elements.list) {
+
+        return;
+
+    }
+
+    const hasFilter =
+
+        Boolean(
+
+            weightState.searchKeyword ||
+
+            weightState.selectedBodyPart ||
+
+            weightState.selectedExercise
+
+        );
+
+    if(hasFilter) {
+
+        elements.list.innerHTML = `
+
+<div class="empty-box weight-empty-box">
+
+    <div class="empty-icon">
+
+        🔎
+
+    </div>
+
+    <h3>
+
+        검색 결과가 없습니다
+
+    </h3>
+
+    <p>
+
+        검색어나 필터 조건을 변경해 주세요.
+
+    </p>
+
+    <button
+        type="button"
+        data-action="reset-weight-filter"
+    >
+
+        필터 초기화
+
+    </button>
+
+</div>
+
+`;
+
+        return;
+
+    }
+
+    elements.list.innerHTML = `
+
+<div class="empty-box weight-empty-box">
+
+    <div class="empty-icon">
+
+        🏋️
+
+    </div>
+
+    <h3>
+
+        등록된 웨이트 기록이 없습니다
+
+    </h3>
+
+    <p>
+
+        첫 번째 운동 기록을 저장해 보세요.
+
+    </p>
+
+</div>
+
+`;
 
 }
 
 /* ======================================================
-   평균 점수
+   페이지 번호 버튼 HTML
 ====================================================== */
 
-function calculateAverageScore(records){
+function createWeightPageButtonHTML(page) {
 
-    if(records.length===0){
+    const isCurrent =
 
-        return 0;
+        page === weightState.page;
+
+    return `
+
+<button
+    type="button"
+    class="weight-page-button${isCurrent ? " active" : ""}"
+    data-action="weight-page"
+    data-page="${page}"
+    ${isCurrent ? 'aria-current="page"' : ""}
+>
+
+    ${page}
+
+</button>
+
+`;
+
+}
+
+/* ======================================================
+   페이지 번호 범위
+====================================================== */
+
+function getWeightPageRange(totalPages) {
+
+    const maximumButtons =
+        5;
+
+    if(totalPages <= maximumButtons) {
+
+        return Array.from(
+
+            {
+
+                length:
+                    totalPages
+
+            },
+
+            (_, index) =>
+                index + 1
+
+        );
 
     }
 
-    const total = records.reduce(
+    let start =
 
-        (sum,item)=>{
+        weightState.page - 2;
 
-            return sum +
+    let end =
 
-            Number(item.score || 0);
+        weightState.page + 2;
+
+    if(start < 1) {
+
+        start = 1;
+
+        end = maximumButtons;
+
+    }
+
+    if(end > totalPages) {
+
+        end = totalPages;
+
+        start =
+
+            totalPages -
+
+            maximumButtons +
+
+            1;
+
+    }
+
+    return Array.from(
+
+        {
+
+            length:
+                end - start + 1
 
         },
 
-        0
-
-    );
-
-    return Number(
-
-        (total / records.length)
-
-        .toFixed(1)
+        (_, index) =>
+            start + index
 
     );
 
 }
 
 /* ======================================================
-   Dashboard 카드
+   페이지네이션 출력
 ====================================================== */
 
-function renderDashboardCards(){
+function renderWeightPagination(records) {
 
-    const sportsAverage =
+    const elements =
+        getWeightElements();
 
-        calculateAverageScore(
+    const totalRecords =
+        records.length;
 
-            appData.sportsRecords
+    const totalPages =
+        getWeightTotalPages(records);
 
-        );
+    normalizeWeightPage(records);
 
-    const poseAverage =
+    if(elements.pageInfo) {
 
-        calculateAverageScore(
+        elements.pageInfo.textContent =
 
-            appData.poseRecords
+            totalRecords === 0
 
-        );
+                ? "0개 기록"
 
-    const totalTraining =
+                : `${weightState.page} / ${totalPages} 페이지 · 총 ${totalRecords}개`;
 
-        appData.sportsRecords.length +
+    }
 
-        appData.weightRecords.length +
+    if(elements.previousPage) {
 
-        appData.poseRecords.length;
+        elements.previousPage.disabled =
 
-    const values = {
+            weightState.page <= 1;
 
-        athlete:
+    }
 
-        appData.athletes.length,
+    if(elements.nextPage) {
 
-        total:
+        elements.nextPage.disabled =
 
-        totalTraining,
+            weightState.page >= totalPages;
 
-        sports:
+    }
 
-        sportsAverage,
+    if(!elements.pagination) {
 
-        pose:
+        return;
 
-        poseAverage
+    }
 
-    };
+    if(totalRecords === 0 || totalPages <= 1) {
 
-    Object.entries(values)
+        elements.pagination.innerHTML =
+            "";
 
-    .forEach(([key,value])=>{
+        elements.pagination.hidden =
+            true;
 
-        $$(`[data-dashboard="${key}"]`)
+        return;
 
-        .forEach(el=>{
+    }
 
-            el.textContent=value;
+    elements.pagination.hidden =
+        false;
 
-        });
+    const pages =
+        getWeightPageRange(totalPages);
 
-    });
+    const firstButton =
+
+        pages[0] > 1
+
+            ? `
+
+<button
+    type="button"
+    class="weight-page-button"
+    data-action="weight-page"
+    data-page="1"
+>
+
+    1
+
+</button>
+
+${pages[0] > 2 ? '<span class="weight-page-gap">…</span>' : ""}
+
+`
+
+            : "";
+
+    const lastPage =
+
+        pages[pages.length - 1];
+
+    const lastButton =
+
+        lastPage < totalPages
+
+            ? `
+
+${lastPage < totalPages - 1 ? '<span class="weight-page-gap">…</span>' : ""}
+
+<button
+    type="button"
+    class="weight-page-button"
+    data-action="weight-page"
+    data-page="${totalPages}"
+>
+
+    ${totalPages}
+
+</button>
+
+`
+
+            : "";
+
+    elements.pagination.innerHTML = `
+
+<button
+    type="button"
+    class="weight-page-arrow"
+    data-action="weight-prev-page"
+    ${weightState.page <= 1 ? "disabled" : ""}
+>
+
+    이전
+
+</button>
+
+${firstButton}
+
+${pages
+    .map(createWeightPageButtonHTML)
+    .join("")}
+
+${lastButton}
+
+<button
+    type="button"
+    class="weight-page-arrow"
+    data-action="weight-next-page"
+    ${weightState.page >= totalPages ? "disabled" : ""}
+>
+
+    다음
+
+</button>
+
+`;
 
 }
-/* ======================================================
-   app.js Part 3-2
-   Chart.js Dashboard
-====================================================== */
 
 /* ======================================================
-   월별 훈련 데이터
+   기록 개수 출력
 ====================================================== */
 
-function getMonthlyTrainingData(){
+function renderWeightRecordCount(
 
-    const months = [
-        "1월","2월","3월","4월","5월","6월",
-        "7월","8월","9월","10월","11월","12월"
-    ];
+    filteredCount,
 
-    const values = new Array(12).fill(0);
+    totalCount
 
-    const allRecords = [
+) {
 
-        ...appData.sportsRecords,
-        ...appData.weightRecords,
-        ...appData.poseRecords
+    const elements =
 
-    ];
+        document.querySelectorAll(
 
-    allRecords.forEach(record=>{
+            "[data-weight-record-count]"
 
-        if(!record.date){
+        );
+
+    elements.forEach(element => {
+
+        if(filteredCount === totalCount) {
+
+            element.textContent =
+
+                `${totalCount}개`;
 
             return;
 
         }
 
-        const month = new Date(record.date).getMonth();
+        element.textContent =
 
-        values[month]++;
+            `${filteredCount}개 / 전체 ${totalCount}개`;
 
     });
 
-    return{
-
-        labels:months,
-        data:values
-
-    };
-
 }
 
 /* ======================================================
-   훈련 종류 통계
+   페이지 출력
 ====================================================== */
 
-function getTrainingTypeData(){
+function renderWeightPage() {
 
-    return{
+    const elements =
+        getWeightElements();
 
-        labels:[
-
-            "종목훈련",
-            "웨이트",
-            "AI 자세"
-
-        ],
-
-        data:[
-
-            appData.sportsRecords.length,
-
-            appData.weightRecords.length,
-
-            appData.poseRecords.length
-
-        ]
-
-    };
-
-}
-
-/* ======================================================
-   월별 그래프
-====================================================== */
-
-function renderMonthlyChart(){
-
-    const canvas = $("#monthlyChart");
-
-    if(!canvas){
+    if(!elements.list) {
 
         return;
 
     }
 
-    if(dashboardCharts.monthly){
+    const athlete =
+        getWeightSelectedAthlete();
 
-        dashboardCharts.monthly.destroy();
+    if(!athlete) {
+
+        renderWeightAthleteRequired();
+
+        renderWeightPagination([]);
+
+        renderWeightRecordCount(0, 0);
+
+        return;
 
     }
 
-    const chart = getMonthlyTrainingData();
+    updateWeightExerciseFilterOptions();
 
-    dashboardCharts.monthly =
+    const allRecords =
+        getCurrentWeightRecords();
+
+    const filteredRecords =
+        getFilteredWeightRecords();
+
+    renderWeightRecordCount(
+
+        filteredRecords.length,
+
+        allRecords.length
+
+    );
+
+    if(filteredRecords.length === 0) {
+
+        renderEmptyWeight();
+
+        renderWeightPagination(
+
+            filteredRecords
+
+        );
+
+        renderWeightDashboardCards?.();
+
+        renderWeightAnalysis?.();
+
+        renderWeightAIReport?.();
+
+        refreshWeightCharts?.();
+
+        return;
+
+    }
+
+    const pageRecords =
+        getPaginatedWeightRecords(
+
+            filteredRecords
+
+        );
+
+    elements.list.innerHTML =
+
+        pageRecords
+
+            .map(createWeightCardHTML)
+
+            .join("");
+
+    renderWeightPagination(
+
+        filteredRecords
+
+    );
+
+    renderWeightDashboardCards?.();
+
+    renderWeightAnalysis?.();
+
+    renderWeightAIReport?.();
+
+    refreshWeightCharts?.();
+
+}
+
+/* ======================================================
+   카드 버튼 이벤트
+====================================================== */
+
+function handleWeightListClick(event) {
+
+    const button =
+
+        event.target.closest(
+
+            "[data-action]"
+
+        );
+
+    if(!button) {
+
+        return;
+
+    }
+
+    const action =
+        button.dataset.action;
+
+    const id =
+        button.dataset.id;
+
+    switch(action) {
+
+        case "edit-weight":
+
+            startEditWeightRecord(id);
+
+            break;
+
+        case "delete-weight":
+
+            requestDeleteWeightRecord(id);
+
+            break;
+
+        case "reset-weight-filter":
+
+            resetWeightFilters();
+
+            break;
+
+    }
+
+}
+
+/* ======================================================
+   페이지네이션 클릭
+====================================================== */
+
+function handleWeightPaginationClick(event) {
+
+    const button =
+
+        event.target.closest(
+
+            "[data-action]"
+
+        );
+
+    if(!button) {
+
+        return;
+
+    }
+
+    const action =
+        button.dataset.action;
+
+    switch(action) {
+
+        case "weight-page":
+
+            goToWeightPage(
+
+                button.dataset.page
+
+            );
+
+            break;
+
+        case "weight-prev-page":
+
+            goToPreviousWeightPage();
+
+            break;
+
+        case "weight-next-page":
+
+            goToNextWeightPage();
+
+            break;
+
+    }
+
+}
+
+/* ======================================================
+   페이지당 기록 개수 변경
+====================================================== */
+
+function setWeightPageSize(size) {
+
+    const nextSize =
+
+        Math.max(
+
+            1,
+
+            weightToNumber(size)
+
+        );
+
+    weightState.pageSize =
+        nextSize;
+
+    weightState.page =
+        1;
+
+    renderWeightPage();
+
+}
+
+/* ======================================================
+   페이지 이동 시 상단으로
+====================================================== */
+
+function scrollWeightListToTop() {
+
+    const elements =
+        getWeightElements();
+
+    elements.list?.scrollIntoView({
+
+        behavior:
+            "smooth",
+
+        block:
+            "start"
+
+    });
+
+}
+
+/* ======================================================
+   페이지 이동 함수 보강
+====================================================== */
+
+function changeWeightPage(page) {
+
+    const previousPage =
+
+        weightState.page;
+
+    goToWeightPage(page);
+
+    if(previousPage !== weightState.page) {
+
+        scrollWeightListToTop();
+
+    }
+
+}
+/* ======================================================
+   weight.js Part 3-1
+   Statistics / Summary / Personal Record
+====================================================== */
+
+/* ======================================================
+   통계용 기록
+====================================================== */
+
+function getWeightStatisticsRecords() {
+
+    return getFilteredWeightRecords();
+
+}
+
+/* ======================================================
+   필터 영향 없는 전체 선수 기록
+====================================================== */
+
+function getAllWeightStatisticsRecords() {
+
+    return getCurrentWeightRecords();
+
+}
+
+/* ======================================================
+   총 운동 기록 수
+====================================================== */
+
+function getTotalWorkoutCount() {
+
+    return getWeightStatisticsRecords().length;
+
+}
+
+/* ======================================================
+   총 볼륨
+====================================================== */
+
+function getTotalVolume() {
+
+    return getWeightStatisticsRecords()
+
+        .reduce(
+
+            (sum, record) =>
+
+                sum +
+
+                weightToNumber(record.volume),
+
+            0
+
+        );
+
+}
+
+/* ======================================================
+   평균 볼륨
+====================================================== */
+
+function getAverageVolume() {
+
+    const records =
+        getWeightStatisticsRecords();
+
+    if(records.length === 0) {
+
+        return 0;
+
+    }
+
+    return Number(
+
+        (
+
+            getTotalVolume() /
+
+            records.length
+
+        ).toFixed(1)
+
+    );
+
+}
+
+/* ======================================================
+   평균 중량
+====================================================== */
+
+function getAverageWeight() {
+
+    const records =
+        getWeightStatisticsRecords();
+
+    if(records.length === 0) {
+
+        return 0;
+
+    }
+
+    const total =
+
+        records.reduce(
+
+            (sum, record) =>
+
+                sum +
+
+                weightToNumber(record.weight),
+
+            0
+
+        );
+
+    return Number(
+
+        (
+
+            total /
+
+            records.length
+
+        ).toFixed(1)
+
+    );
+
+}
+
+/* ======================================================
+   평균 1RM
+====================================================== */
+
+function getAverageOneRM() {
+
+    const records =
+        getWeightStatisticsRecords();
+
+    if(records.length === 0) {
+
+        return 0;
+
+    }
+
+    const total =
+
+        records.reduce(
+
+            (sum, record) =>
+
+                sum +
+
+                weightToNumber(record.oneRM),
+
+            0
+
+        );
+
+    return Number(
+
+        (
+
+            total /
+
+            records.length
+
+        ).toFixed(1)
+
+    );
+
+}
+
+/* ======================================================
+   평균 RPE
+====================================================== */
+
+function getAverageRPE() {
+
+    const records =
+
+        getWeightStatisticsRecords()
+
+        .filter(
+
+            record =>
+
+                weightToNumber(record.rpe) > 0
+
+        );
+
+    if(records.length === 0) {
+
+        return 0;
+
+    }
+
+    const total =
+
+        records.reduce(
+
+            (sum, record) =>
+
+                sum +
+
+                weightToNumber(record.rpe),
+
+            0
+
+        );
+
+    return Number(
+
+        (
+
+            total /
+
+            records.length
+
+        ).toFixed(1)
+
+    );
+
+}
+
+/* ======================================================
+   최고 1RM
+====================================================== */
+
+function getBestOneRM() {
+
+    const records =
+        getWeightStatisticsRecords();
+
+    if(records.length === 0) {
+
+        return 0;
+
+    }
+
+    return Math.max(
+
+        ...records.map(
+
+            record =>
+
+                weightToNumber(record.oneRM)
+
+        )
+
+    );
+
+}
+
+/* ======================================================
+   최고 볼륨
+====================================================== */
+
+function getBestVolume() {
+
+    const records =
+        getWeightStatisticsRecords();
+
+    if(records.length === 0) {
+
+        return 0;
+
+    }
+
+    return Math.max(
+
+        ...records.map(
+
+            record =>
+
+                weightToNumber(record.volume)
+
+        )
+
+    );
+
+}
+
+/* ======================================================
+   최고 중량
+====================================================== */
+
+function getBestWeight() {
+
+    const records =
+        getWeightStatisticsRecords();
+
+    if(records.length === 0) {
+
+        return 0;
+
+    }
+
+    return Math.max(
+
+        ...records.map(
+
+            record =>
+
+                weightToNumber(record.weight)
+
+        )
+
+    );
+
+}
+
+/* ======================================================
+   운동 종류 수
+====================================================== */
+
+function getExerciseCount() {
+
+    return new Set(
+
+        getWeightStatisticsRecords()
+
+            .map(
+
+                record =>
+
+                    record.exercise
+
+            )
+
+            .filter(Boolean)
+
+    ).size;
+
+}
+
+/* ======================================================
+   운동 부위 수
+====================================================== */
+
+function getBodyPartCount() {
+
+    return new Set(
+
+        getWeightStatisticsRecords()
+
+            .map(
+
+                record =>
+
+                    record.bodyPart
+
+            )
+
+            .filter(Boolean)
+
+    ).size;
+
+}
+
+/* ======================================================
+   운동별 기록
+====================================================== */
+
+function getExerciseRecords(exercise) {
+
+    if(!exercise) {
+
+        return [];
+
+    }
+
+    return getAllWeightStatisticsRecords()
+
+        .filter(
+
+            record =>
+
+                record.exercise ===
+
+                exercise
+
+        )
+
+        .map(normalizeWeightRecord);
+
+}
+
+/* ======================================================
+   운동별 최고 기록
+====================================================== */
+
+function getExercisePR(exercise) {
+
+    const records =
+        getExerciseRecords(exercise);
+
+    if(records.length === 0) {
+
+        return null;
+
+    }
+
+    return records.reduce(
+
+        (best, current) => {
+
+            if(
+
+                weightToNumber(current.oneRM) >
+
+                weightToNumber(best.oneRM)
+
+            ) {
+
+                return current;
+
+            }
+
+            if(
+
+                weightToNumber(current.oneRM) ===
+
+                weightToNumber(best.oneRM)
+
+                &&
+
+                getWeightDateTime(current) >
+
+                getWeightDateTime(best)
+
+            ) {
+
+                return current;
+
+            }
+
+            return best;
+
+        }
+
+    );
+
+}
+
+/* ======================================================
+   전체 최고 기록
+====================================================== */
+
+function getWeightPersonalRecord() {
+
+    const records =
+        getWeightStatisticsRecords();
+
+    if(records.length === 0) {
+
+        return null;
+
+    }
+
+    return records.reduce(
+
+        (best, current) => {
+
+            return (
+
+                weightToNumber(current.oneRM) >
+
+                weightToNumber(best.oneRM)
+
+            )
+
+                ? current
+
+                : best;
+
+        }
+
+    );
+
+}
+
+/* ======================================================
+   최근 기록
+====================================================== */
+
+function getLatestWeightRecord() {
+
+    const records =
+
+        [...getAllWeightStatisticsRecords()]
+
+        .sort(
+
+            (a, b) =>
+
+                getWeightDateTime(b) -
+
+                getWeightDateTime(a)
+
+        );
+
+    return records[0] || null;
+
+}
+
+/* ======================================================
+   첫 번째 기록
+====================================================== */
+
+function getFirstWeightRecord() {
+
+    const records =
+
+        [...getAllWeightStatisticsRecords()]
+
+        .sort(
+
+            (a, b) =>
+
+                getWeightDateTime(a) -
+
+                getWeightDateTime(b)
+
+        );
+
+    return records[0] || null;
+
+}
+
+/* ======================================================
+   날짜 차이
+====================================================== */
+
+function getWeightDaysDifference(
+
+    startDate,
+
+    endDate
+
+) {
+
+    const start =
+        new Date(startDate);
+
+    const end =
+        new Date(endDate);
+
+    if(
+
+        Number.isNaN(start.getTime()) ||
+
+        Number.isNaN(end.getTime())
+
+    ) {
+
+        return 0;
+
+    }
+
+    const difference =
+
+        end.getTime() -
+
+        start.getTime();
+
+    return Math.max(
+
+        0,
+
+        Math.floor(
+
+            difference /
+
+            86400000
+
+        )
+
+    );
+
+}
+
+/* ======================================================
+   최근 N일 기록
+====================================================== */
+
+function getRecentWeightRecords(days = 7) {
+
+    const safeDays =
+
+        Math.max(
+
+            1,
+
+            weightToNumber(days)
+
+        );
+
+    const today =
+        new Date();
+
+    today.setHours(
+
+        23,
+
+        59,
+
+        59,
+
+        999
+
+    );
+
+    const limit =
+        new Date(today);
+
+    limit.setDate(
+
+        limit.getDate() -
+
+        safeDays +
+
+        1
+
+    );
+
+    limit.setHours(
+
+        0,
+
+        0,
+
+        0,
+
+        0
+
+    );
+
+    return getAllWeightStatisticsRecords()
+
+        .filter(record => {
+
+            const date =
+
+                new Date(record.date);
+
+            if(Number.isNaN(date.getTime())) {
+
+                return false;
+
+            }
+
+            return (
+
+                date >= limit &&
+
+                date <= today
+
+            );
+
+        });
+
+}
+
+/* ======================================================
+   최근 7일 기록
+====================================================== */
+
+function getLastWeekRecords() {
+
+    return getRecentWeightRecords(7);
+
+}
+
+/* ======================================================
+   최근 30일 기록
+====================================================== */
+
+function getLastMonthRecords() {
+
+    return getRecentWeightRecords(30);
+
+}
+
+/* ======================================================
+   기간 볼륨
+====================================================== */
+
+function getWeightVolumeByRecords(records) {
+
+    return records.reduce(
+
+        (sum, record) =>
+
+            sum +
+
+            weightToNumber(record.volume),
+
+        0
+
+    );
+
+}
+
+/* ======================================================
+   최근 7일 볼륨
+====================================================== */
+
+function getLastWeekVolume() {
+
+    return getWeightVolumeByRecords(
+
+        getLastWeekRecords()
+
+    );
+
+}
+
+/* ======================================================
+   최근 30일 볼륨
+====================================================== */
+
+function getLastMonthVolume() {
+
+    return getWeightVolumeByRecords(
+
+        getLastMonthRecords()
+
+    );
+
+}
+
+/* ======================================================
+   가장 많이 수행한 운동
+====================================================== */
+
+function getMostPerformedExercise() {
+
+    const counter = {};
+
+    getAllWeightStatisticsRecords()
+
+        .forEach(record => {
+
+            const exercise =
+                record.exercise;
+
+            if(!exercise) {
+
+                return;
+
+            }
+
+            counter[exercise] =
+
+                (
+
+                    counter[exercise] ||
+
+                    0
+
+                ) + 1;
+
+        });
+
+    const ranking =
+
+        Object.entries(counter)
+
+        .sort(
+
+            (a, b) =>
+
+                b[1] -
+
+                a[1]
+
+        );
+
+    if(ranking.length === 0) {
+
+        return null;
+
+    }
+
+    return {
+
+        exercise:
+            ranking[0][0],
+
+        count:
+            ranking[0][1]
+
+    };
+
+}
+
+/* ======================================================
+   가장 많이 수행한 부위
+====================================================== */
+
+function getMostPerformedBodyPart() {
+
+    const counter = {};
+
+    getAllWeightStatisticsRecords()
+
+        .forEach(record => {
+
+            const bodyPart =
+                record.bodyPart;
+
+            if(!bodyPart) {
+
+                return;
+
+            }
+
+            counter[bodyPart] =
+
+                (
+
+                    counter[bodyPart] ||
+
+                    0
+
+                ) + 1;
+
+        });
+
+    const ranking =
+
+        Object.entries(counter)
+
+        .sort(
+
+            (a, b) =>
+
+                b[1] -
+
+                a[1]
+
+        );
+
+    if(ranking.length === 0) {
+
+        return null;
+
+    }
+
+    return {
+
+        bodyPart:
+            ranking[0][0],
+
+        count:
+            ranking[0][1]
+
+    };
+
+}
+
+/* ======================================================
+   운동 부위 통계
+====================================================== */
+
+function getBodyPartStatistics() {
+
+    const statistics = {};
+
+    BODY_PARTS.forEach(
+
+        bodyPart => {
+
+            statistics[bodyPart] =
+                0;
+
+        }
+
+    );
+
+    getAllWeightStatisticsRecords()
+
+        .forEach(record => {
+
+            const bodyPart =
+                record.bodyPart;
+
+            if(!bodyPart) {
+
+                return;
+
+            }
+
+            if(
+
+                typeof statistics[bodyPart] !==
+
+                "number"
+
+            ) {
+
+                statistics[bodyPart] =
+                    0;
+
+            }
+
+            statistics[bodyPart] +=
+                1;
+
+        });
+
+    return statistics;
+
+}
+
+/* ======================================================
+   전체 성장률
+====================================================== */
+
+function calculateGrowthRate() {
+
+    const records =
+
+        [...getAllWeightStatisticsRecords()]
+
+        .filter(
+
+            record =>
+
+                weightToNumber(record.oneRM) > 0
+
+        )
+
+        .sort(
+
+            (a, b) =>
+
+                getWeightDateTime(a) -
+
+                getWeightDateTime(b)
+
+        );
+
+    if(records.length < 2) {
+
+        return 0;
+
+    }
+
+    const first =
+        weightToNumber(
+
+            records[0].oneRM
+
+        );
+
+    const last =
+        weightToNumber(
+
+            records.at(-1).oneRM
+
+        );
+
+    if(first <= 0) {
+
+        return 0;
+
+    }
+
+    return Number(
+
+        (
+
+            (
+
+                last -
+
+                first
+
+            ) /
+
+            first *
+
+            100
+
+        ).toFixed(1)
+
+    );
+
+}
+
+/* ======================================================
+   운동별 평균 중량
+====================================================== */
+
+function getExerciseAverageWeight(exercise) {
+
+    const records =
+        getExerciseRecords(exercise);
+
+    if(records.length === 0) {
+
+        return 0;
+
+    }
+
+    const total =
+
+        records.reduce(
+
+            (sum, record) =>
+
+                sum +
+
+                weightToNumber(record.weight),
+
+            0
+
+        );
+
+    return Number(
+
+        (
+
+            total /
+
+            records.length
+
+        ).toFixed(1)
+
+    );
+
+}
+
+/* ======================================================
+   운동별 평균 볼륨
+====================================================== */
+
+function getExerciseAverageVolume(exercise) {
+
+    const records =
+        getExerciseRecords(exercise);
+
+    if(records.length === 0) {
+
+        return 0;
+
+    }
+
+    const total =
+
+        records.reduce(
+
+            (sum, record) =>
+
+                sum +
+
+                weightToNumber(record.volume),
+
+            0
+
+        );
+
+    return Number(
+
+        (
+
+            total /
+
+            records.length
+
+        ).toFixed(1)
+
+    );
+
+}
+
+/* ======================================================
+   기본 통계 데이터
+====================================================== */
+
+function getWeightDashboardData() {
+
+    return {
+
+        totalWorkout:
+            getTotalWorkoutCount(),
+
+        totalVolume:
+            getTotalVolume(),
+
+        averageVolume:
+            getAverageVolume(),
+
+        averageWeight:
+            getAverageWeight(),
+
+        averageOneRM:
+            getAverageOneRM(),
+
+        averageRPE:
+            getAverageRPE(),
+
+        bestOneRM:
+            getBestOneRM(),
+
+        bestVolume:
+            getBestVolume(),
+
+        bestWeight:
+            getBestWeight(),
+
+        exerciseCount:
+            getExerciseCount(),
+
+        bodyPartCount:
+            getBodyPartCount(),
+
+        growth:
+            calculateGrowthRate(),
+
+        weekVolume:
+            getLastWeekVolume(),
+
+        monthVolume:
+            getLastMonthVolume()
+
+    };
+
+}
+/* ======================================================
+   weight.js Part 3-2
+   Dashboard / Growth / Recovery / AI Analysis
+====================================================== */
+
+/* ======================================================
+   통계 값 출력 형식
+====================================================== */
+
+function formatWeightStatisticValue(
+    key,
+    value
+) {
+
+    switch(key) {
+
+        case "totalVolume":
+
+        case "averageVolume":
+
+        case "weekVolume":
+
+        case "monthVolume":
+
+        case "bestVolume":
+
+            return `${weightFormatNumber(value)} kg`;
+
+        case "averageWeight":
+
+        case "averageOneRM":
+
+        case "bestOneRM":
+
+        case "bestWeight":
+
+            return `${weightFormatNumber(value)} kg`;
+
+        case "averageRPE":
+
+            return value > 0
+                ? String(value)
+                : "-";
+
+        case "growth":
+
+            return `${value > 0 ? "+" : ""}${value}%`;
+
+        case "totalWorkout":
+
+        case "exerciseCount":
+
+        case "bodyPartCount":
+
+            return `${weightFormatNumber(value)}개`;
+
+        default:
+
+            return String(value ?? "-");
+
+    }
+
+}
+
+/* ======================================================
+   Dashboard 통계 카드 출력
+====================================================== */
+
+function renderWeightDashboardCards() {
+
+    const data =
+        getWeightDashboardData();
+
+    Object.entries(data)
+
+        .forEach(([key, value]) => {
+
+            const elements =
+
+                document.querySelectorAll(
+
+                    `[data-weight-stat="${key}"]`
+
+                );
+
+            const formattedValue =
+
+                formatWeightStatisticValue(
+
+                    key,
+
+                    value
+
+                );
+
+            elements.forEach(element => {
+
+                element.textContent =
+                    formattedValue;
+
+            });
+
+        });
+
+}
+
+/* ======================================================
+   운동별 성장률
+====================================================== */
+
+function getExerciseGrowth(exercise) {
+
+    const records =
+
+        getExerciseRecords(exercise)
+
+        .filter(
+
+            record =>
+
+                weightToNumber(record.oneRM) > 0
+
+        )
+
+        .sort(
+
+            (a, b) =>
+
+                getWeightDateTime(a) -
+
+                getWeightDateTime(b)
+
+        );
+
+    if(records.length < 2) {
+
+        return 0;
+
+    }
+
+    const first =
+
+        weightToNumber(
+
+            records[0].oneRM
+
+        );
+
+    const last =
+
+        weightToNumber(
+
+            records.at(-1).oneRM
+
+        );
+
+    if(first <= 0) {
+
+        return 0;
+
+    }
+
+    return Number(
+
+        (
+
+            (
+
+                last -
+
+                first
+
+            ) /
+
+            first *
+
+            100
+
+        ).toFixed(1)
+
+    );
+
+}
+
+/* ======================================================
+   운동별 성장 순위
+====================================================== */
+
+function getExerciseGrowthRanking() {
+
+    const exercises =
+
+        [
+
+            ...new Set(
+
+                getAllWeightStatisticsRecords()
+
+                    .map(
+
+                        record =>
+
+                            record.exercise
+
+                    )
+
+                    .filter(Boolean)
+
+            )
+
+        ];
+
+    return exercises
+
+        .map(exercise => {
+
+            const records =
+
+                getExerciseRecords(exercise);
+
+            return {
+
+                exercise,
+
+                growth:
+                    getExerciseGrowth(exercise),
+
+                recordCount:
+                    records.length,
+
+                bestOneRM:
+                    records.length > 0
+
+                        ? Math.max(
+
+                            ...records.map(
+
+                                record =>
+
+                                    weightToNumber(
+
+                                        record.oneRM
+
+                                    )
+
+                            )
+
+                        )
+
+                        : 0
+
+            };
+
+        })
+
+        .sort((a, b) => {
+
+            if(b.growth !== a.growth) {
+
+                return (
+
+                    b.growth -
+
+                    a.growth
+
+                );
+
+            }
+
+            return (
+
+                b.bestOneRM -
+
+                a.bestOneRM
+
+            );
+
+        });
+
+}
+
+/* ======================================================
+   최근 평균 RPE
+====================================================== */
+
+function getAverageRecentRPE(days = 7) {
+
+    const records =
+
+        getRecentWeightRecords(days)
+
+        .filter(
+
+            record =>
+
+                weightToNumber(record.rpe) > 0
+
+        );
+
+    if(records.length === 0) {
+
+        return 0;
+
+    }
+
+    const total =
+
+        records.reduce(
+
+            (sum, record) =>
+
+                sum +
+
+                weightToNumber(record.rpe),
+
+            0
+
+        );
+
+    return Number(
+
+        (
+
+            total /
+
+            records.length
+
+        ).toFixed(1)
+
+    );
+
+}
+
+/* ======================================================
+   최근 운동 일수
+====================================================== */
+
+function getRecentWorkoutDayCount(days = 7) {
+
+    const records =
+
+        getRecentWeightRecords(days);
+
+    return new Set(
+
+        records
+
+            .map(
+
+                record =>
+
+                    record.date
+
+            )
+
+            .filter(Boolean)
+
+    ).size;
+
+}
+
+/* ======================================================
+   최근 하루 운동량
+====================================================== */
+
+function getLatestDayWeightRecords() {
+
+    const records =
+
+        [...getAllWeightStatisticsRecords()]
+
+        .sort(
+
+            (a, b) =>
+
+                getWeightDateTime(b) -
+
+                getWeightDateTime(a)
+
+        );
+
+    if(records.length === 0) {
+
+        return [];
+
+    }
+
+    const latestDate =
+
+        records[0].date;
+
+    return records.filter(
+
+        record =>
+
+            record.date ===
+
+            latestDate
+
+    );
+
+}
+
+/* ======================================================
+   최근 하루 볼륨
+====================================================== */
+
+function getLatestDayVolume() {
+
+    return getWeightVolumeByRecords(
+
+        getLatestDayWeightRecords()
+
+    );
+
+}
+
+/* ======================================================
+   최근 운동 이후 경과일
+====================================================== */
+
+function getDaysSinceLastWorkout() {
+
+    const latest =
+        getLatestWeightRecord();
+
+    if(!latest?.date) {
+
+        return null;
+
+    }
+
+    return getWeightDaysDifference(
+
+        latest.date,
+
+        weightGetTodayValue()
+
+    );
+
+}
+
+/* ======================================================
+   회복 점수
+====================================================== */
+
+function calculateRecoveryScore() {
+
+    const recentRecords =
+        getLastWeekRecords();
+
+    if(recentRecords.length === 0) {
+
+        return 100;
+
+    }
+
+    const averageRPE =
+        getAverageRecentRPE(7);
+
+    const workoutDays =
+        getRecentWorkoutDayCount(7);
+
+    const latestDayVolume =
+        getLatestDayVolume();
+
+    const monthRecords =
+        getLastMonthRecords();
+
+    const averageSessionVolume =
+
+        monthRecords.length > 0
+
+            ? getWeightVolumeByRecords(
+
+                monthRecords
+
+            ) / monthRecords.length
+
+            : 0;
+
+    let score = 100;
+
+    if(averageRPE >= 9) {
+
+        score -= 40;
+
+    } else if(averageRPE >= 8) {
+
+        score -= 28;
+
+    } else if(averageRPE >= 7) {
+
+        score -= 16;
+
+    } else if(averageRPE >= 6) {
+
+        score -= 8;
+
+    }
+
+    if(workoutDays >= 7) {
+
+        score -= 25;
+
+    } else if(workoutDays >= 6) {
+
+        score -= 18;
+
+    } else if(workoutDays >= 5) {
+
+        score -= 10;
+
+    }
+
+    if(
+
+        averageSessionVolume > 0 &&
+
+        latestDayVolume >
+
+        averageSessionVolume * 1.5
+
+    ) {
+
+        score -= 12;
+
+    }
+
+    const daysSinceLastWorkout =
+
+        getDaysSinceLastWorkout();
+
+    if(
+
+        daysSinceLastWorkout !== null &&
+
+        daysSinceLastWorkout >= 2
+
+    ) {
+
+        score += 5;
+
+    }
+
+    return Math.max(
+
+        0,
+
+        Math.min(
+
+            100,
+
+            Math.round(score)
+
+        )
+
+    );
+
+}
+
+/* ======================================================
+   회복 상태
+====================================================== */
+
+function getRecoveryStatus(score = null) {
+
+    const recoveryScore =
+
+        score === null
+
+            ? calculateRecoveryScore()
+
+            : weightToNumber(score);
+
+    if(recoveryScore >= 90) {
+
+        return {
+
+            level:
+                "매우 좋음",
+
+            message:
+                "회복 상태가 매우 좋습니다. 예정된 훈련을 진행해도 좋습니다."
+
+        };
+
+    }
+
+    if(recoveryScore >= 75) {
+
+        return {
+
+            level:
+                "좋음",
+
+            message:
+                "회복 상태가 좋습니다. 평소 강도로 운동할 수 있습니다."
+
+        };
+
+    }
+
+    if(recoveryScore >= 60) {
+
+        return {
+
+            level:
+                "보통",
+
+            message:
+                "피로가 조금 남아 있습니다. 운동 강도를 조절하세요."
+
+        };
+
+    }
+
+    if(recoveryScore >= 40) {
+
+        return {
+
+            level:
+                "낮음",
+
+            message:
+                "회복이 부족합니다. 가벼운 운동이나 회복 훈련을 권장합니다."
+
+        };
+
+    }
+
+    return {
+
+        level:
+            "매우 낮음",
+
+        message:
+            "피로가 높은 상태입니다. 충분한 휴식과 회복이 필요합니다."
+
+    };
+
+}
+
+/* ======================================================
+   피로도
+====================================================== */
+
+function getFatigueLevel() {
+
+    const score =
+        calculateRecoveryScore();
+
+    if(score >= 90) {
+
+        return "매우 낮음";
+
+    }
+
+    if(score >= 75) {
+
+        return "낮음";
+
+    }
+
+    if(score >= 60) {
+
+        return "보통";
+
+    }
+
+    if(score >= 40) {
+
+        return "높음";
+
+    }
+
+    return "매우 높음";
+
+}
+
+/* ======================================================
+   최근 부위 운동 날짜
+====================================================== */
+
+function getLatestBodyPartDate(bodyPart) {
+
+    const records =
+
+        getAllWeightStatisticsRecords()
+
+        .filter(
+
+            record =>
+
+                record.bodyPart ===
+
+                bodyPart
+
+        )
+
+        .sort(
+
+            (a, b) =>
+
+                getWeightDateTime(b) -
+
+                getWeightDateTime(a)
+
+        );
+
+    return records[0]?.date || null;
+
+}
+
+/* ======================================================
+   부위별 경과일
+====================================================== */
+
+function getBodyPartRestDays(bodyPart) {
+
+    const latestDate =
+
+        getLatestBodyPartDate(bodyPart);
+
+    if(!latestDate) {
+
+        return 999;
+
+    }
+
+    return getWeightDaysDifference(
+
+        latestDate,
+
+        weightGetTodayValue()
+
+    );
+
+}
+
+/* ======================================================
+   다음 운동 추천
+====================================================== */
+
+function recommendNextWorkout() {
+
+    const records =
+
+        getAllWeightStatisticsRecords();
+
+    if(records.length === 0) {
+
+        return {
+
+            bodyPart:
+                "전신",
+
+            message:
+                "첫 기록은 전신 기본 운동부터 시작해 보세요."
+
+        };
+
+    }
+
+    const statistics =
+        getBodyPartStatistics();
+
+    const recommendation =
+
+        BODY_PARTS
+
+        .map(bodyPart => {
+
+            return {
+
+                bodyPart,
+
+                count:
+                    weightToNumber(
+
+                        statistics[bodyPart]
+
+                    ),
+
+                restDays:
+                    getBodyPartRestDays(
+
+                        bodyPart
+
+                    )
+
+            };
+
+        })
+
+        .sort((a, b) => {
+
+            if(b.restDays !== a.restDays) {
+
+                return (
+
+                    b.restDays -
+
+                    a.restDays
+
+                );
+
+            }
+
+            return (
+
+                a.count -
+
+                b.count
+
+            );
+
+        })[0];
+
+    if(!recommendation) {
+
+        return {
+
+            bodyPart:
+                "전신",
+
+            message:
+                "전신 운동을 추천합니다."
+
+        };
+
+    }
+
+    return {
+
+        bodyPart:
+            recommendation.bodyPart,
+
+        restDays:
+            recommendation.restDays,
+
+        message:
+
+            recommendation.restDays >= 999
+
+                ? `${recommendation.bodyPart} 기록이 아직 없습니다. ${recommendation.bodyPart} 운동을 추천합니다.`
+
+                : `${recommendation.bodyPart} 운동 후 ${recommendation.restDays}일이 지났습니다. 다음 운동으로 추천합니다.`
+
+    };
+
+}
+
+/* ======================================================
+   훈련 균형 분석
+====================================================== */
+
+function getWeightBalanceAnalysis() {
+
+    const statistics =
+        getBodyPartStatistics();
+
+    const entries =
+
+        Object.entries(statistics)
+
+        .filter(
+
+            ([, count]) =>
+
+                count > 0
+
+        )
+
+        .sort(
+
+            (a, b) =>
+
+                b[1] -
+
+                a[1]
+
+        );
+
+    if(entries.length === 0) {
+
+        return {
+
+            strongest:
+                null,
+
+            weakest:
+                null,
+
+            message:
+                "운동 기록이 없어 부위별 균형을 분석할 수 없습니다."
+
+        };
+
+    }
+
+    const strongest =
+        entries[0];
+
+    const weakest =
+
+        BODY_PARTS
+
+        .map(bodyPart => [
+
+            bodyPart,
+
+            weightToNumber(
+
+                statistics[bodyPart]
+
+            )
+
+        ])
+
+        .sort(
+
+            (a, b) =>
+
+                a[1] -
+
+                b[1]
+
+        )[0];
+
+    const difference =
+
+        strongest[1] -
+
+        weakest[1];
+
+    let message =
+
+        `${strongest[0]} 운동 비중이 가장 높습니다.`;
+
+    if(difference >= 5) {
+
+        message +=
+
+            ` ${weakest[0]} 운동 비중을 조금 늘려 균형을 맞춰보세요.`;
+
+    } else {
+
+        message +=
+
+            " 부위별 운동 횟수가 비교적 균형적입니다.";
+
+    }
+
+    return {
+
+        strongest: {
+
+            bodyPart:
+                strongest[0],
+
+            count:
+                strongest[1]
+
+        },
+
+        weakest: {
+
+            bodyPart:
+                weakest[0],
+
+            count:
+                weakest[1]
+
+        },
+
+        message
+
+    };
+
+}
+
+/* ======================================================
+   AI 분석 데이터
+====================================================== */
+
+function createWeightAnalysisData() {
+
+    const dashboard =
+        getWeightDashboardData();
+
+    const latest =
+        getLatestWeightRecord();
+
+    const personalRecord =
+        getWeightPersonalRecord();
+
+    const favorite =
+        getMostPerformedExercise();
+
+    const favoriteBodyPart =
+        getMostPerformedBodyPart();
+
+    const recoveryScore =
+        calculateRecoveryScore();
+
+    const recoveryStatus =
+        getRecoveryStatus(
+
+            recoveryScore
+
+        );
+
+    const recommendation =
+        recommendNextWorkout();
+
+    const balance =
+        getWeightBalanceAnalysis();
+
+    const growthRanking =
+        getExerciseGrowthRanking();
+
+    return {
+
+        ...dashboard,
+
+        latest,
+
+        personalRecord,
+
+        favorite,
+
+        favoriteBodyPart,
+
+        recoveryScore,
+
+        recoveryStatus,
+
+        fatigue:
+            getFatigueLevel(),
+
+        recommendation,
+
+        balance,
+
+        growthRanking,
+
+        recentRPE:
+            getAverageRecentRPE(7),
+
+        recentWorkoutDays:
+            getRecentWorkoutDayCount(7),
+
+        daysSinceLastWorkout:
+            getDaysSinceLastWorkout()
+
+    };
+
+}
+
+/* ======================================================
+   AI 분석 문장 생성
+====================================================== */
+
+function generateWeightAnalysis() {
+
+    const data =
+        createWeightAnalysisData();
+
+    if(data.totalWorkout === 0) {
+
+        return "웨이트 기록을 저장하면 운동 성장률과 회복 상태를 분석합니다.";
+
+    }
+
+    const messages = [];
+
+    if(data.growth >= 10) {
+
+        messages.push(
+
+            `전체 예상 1RM이 처음보다 ${data.growth}% 향상되었습니다.`
+
+        );
+
+    } else if(data.growth >= 3) {
+
+        messages.push(
+
+            `예상 1RM이 ${data.growth}% 증가하며 꾸준히 성장하고 있습니다.`
+
+        );
+
+    } else if(data.growth > 0) {
+
+        messages.push(
+
+            `예상 1RM이 ${data.growth}% 증가했습니다.`
+
+        );
+
+    } else if(data.growth < 0) {
+
+        messages.push(
+
+            `최근 예상 1RM이 ${Math.abs(data.growth)}% 낮아졌습니다. 피로와 컨디션을 확인하세요.`
+
+        );
+
+    } else {
+
+        messages.push(
+
+            "현재 기록만으로는 뚜렷한 성장률 변화가 나타나지 않았습니다."
+
+        );
+
+    }
+
+    messages.push(
+
+        `회복 점수는 ${data.recoveryScore}점으로 ${data.recoveryStatus.level} 상태입니다.`
+
+    );
+
+    if(data.recentRPE >= 8.5) {
+
+        messages.push(
+
+            "최근 RPE가 높아 다음 훈련의 중량이나 세트 수를 줄이는 것이 좋습니다."
+
+        );
+
+    } else if(
+
+        data.recentRPE > 0 &&
+
+        data.recentRPE <= 6
+
+    ) {
+
+        messages.push(
+
+            "최근 운동 강도에 여유가 있어 컨디션이 좋다면 소폭 증량할 수 있습니다."
+
+        );
+
+    }
+
+    if(data.favorite) {
+
+        messages.push(
+
+            `가장 많이 수행한 운동은 ${data.favorite.exercise}이며 총 ${data.favorite.count}회 기록했습니다.`
+
+        );
+
+    }
+
+    messages.push(
+
+        data.recommendation.message
+
+    );
+
+    return messages.join(" ");
+
+}
+
+/* ======================================================
+   기본 AI 분석 출력
+====================================================== */
+
+function renderWeightAnalysis() {
+
+    const element =
+
+        document.querySelector(
+
+            "#weightAnalysis"
+
+        );
+
+    if(!element) {
+
+        return;
+
+    }
+
+    element.textContent =
+        generateWeightAnalysis();
+
+}
+
+/* ======================================================
+   상세 AI 리포트 출력
+====================================================== */
+
+function renderWeightAIReport() {
+
+    const container =
+
+        document.querySelector(
+
+            "#weightAIReport"
+
+        );
+
+    if(!container) {
+
+        return;
+
+    }
+
+    const data =
+        createWeightAnalysisData();
+
+    if(data.totalWorkout === 0) {
+
+        container.innerHTML = `
+
+<div class="ai-card">
+
+    <h3>AI 웨이트 분석</h3>
+
+    <p>
+        기록을 저장하면 회복도, 성장률, 운동 균형과 다음 운동을 분석합니다.
+    </p>
+
+</div>
+
+`;
+
+        return;
+
+    }
+
+    const topGrowth =
+
+        data.growthRanking
+
+        .find(
+
+            item =>
+
+                item.recordCount >= 2
+
+        );
+
+    const growthHTML =
+
+        topGrowth
+
+            ? `
+
+<p>
+
+    <strong>가장 성장한 운동</strong>
+
+    ${weightEscapeHTML(topGrowth.exercise)}
+    (${topGrowth.growth > 0 ? "+" : ""}${topGrowth.growth}%)
+
+</p>
+
+`
+
+            : "";
+
+    container.innerHTML = `
+
+<div class="ai-card">
+
+    <h3>AI 웨이트 분석</h3>
+
+    <div class="weight-ai-grid">
+
+        <div>
+
+            <span>회복 점수</span>
+
+            <strong>
+                ${data.recoveryScore}점
+            </strong>
+
+        </div>
+
+        <div>
+
+            <span>회복 상태</span>
+
+            <strong>
+                ${weightEscapeHTML(data.recoveryStatus.level)}
+            </strong>
+
+        </div>
+
+        <div>
+
+            <span>피로도</span>
+
+            <strong>
+                ${weightEscapeHTML(data.fatigue)}
+            </strong>
+
+        </div>
+
+        <div>
+
+            <span>최근 7일 운동</span>
+
+            <strong>
+                ${data.recentWorkoutDays}일
+            </strong>
+
+        </div>
+
+    </div>
+
+    <p>
+
+        ${weightEscapeHTML(data.recoveryStatus.message)}
+
+    </p>
+
+    <p>
+
+        <strong>추천 운동</strong>
+
+        ${weightEscapeHTML(data.recommendation.message)}
+
+    </p>
+
+    <p>
+
+        <strong>훈련 균형</strong>
+
+        ${weightEscapeHTML(data.balance.message)}
+
+    </p>
+
+    ${growthHTML}
+
+</div>
+
+`;
+
+}
+/* ======================================================
+   weight.js Part 4-1
+   Chart.js / Chart Data / Safe Render
+====================================================== */
+
+/* ======================================================
+   차트 상태
+====================================================== */
+
+const weightCharts = {
+
+    oneRM:
+        null,
+
+    volume:
+        null,
+
+    bodyPart:
+        null,
+
+    monthly:
+        null,
+
+    growth:
+        null
+
+};
+
+/* ======================================================
+   Chart.js 사용 가능 여부
+====================================================== */
+
+function isWeightChartAvailable() {
+
+    return (
+
+        typeof window.Chart ===
+
+        "function"
+
+    );
+
+}
+
+/* ======================================================
+   차트 안전 제거
+====================================================== */
+
+function destroyWeightChart(chartName) {
+
+    const chart =
+
+        weightCharts[chartName];
+
+    if(
+
+        chart &&
+
+        typeof chart.destroy ===
+
+        "function"
+
+    ) {
+
+        chart.destroy();
+
+    }
+
+    weightCharts[chartName] =
+        null;
+
+}
+
+/* ======================================================
+   모든 차트 제거
+====================================================== */
+
+function destroyAllWeightCharts() {
+
+    Object.keys(weightCharts)
+
+        .forEach(
+
+            destroyWeightChart
+
+        );
+
+}
+
+/* ======================================================
+   차트용 날짜순 기록
+====================================================== */
+
+function getWeightChartRecords() {
+
+    return [
+
+        ...getAllWeightStatisticsRecords()
+
+    ]
+
+    .filter(
+
+        record =>
+
+            record.date
+
+    )
+
+    .sort(
+
+        (a, b) =>
+
+            getWeightDateTime(a) -
+
+            getWeightDateTime(b)
+
+    );
+
+}
+
+/* ======================================================
+   날짜별 기록 그룹
+====================================================== */
+
+function groupWeightRecordsByDate(records) {
+
+    const groups = {};
+
+    records.forEach(record => {
+
+        const date =
+
+            record.date ||
+
+            "날짜 없음";
+
+        if(!groups[date]) {
+
+            groups[date] = [];
+
+        }
+
+        groups[date].push(record);
+
+    });
+
+    return groups;
+
+}
+
+/* ======================================================
+   날짜별 최고 1RM
+====================================================== */
+
+function getOneRMChartData() {
+
+    const records =
+
+        getWeightChartRecords();
+
+    const groups =
+
+        groupWeightRecordsByDate(
+
+            records
+
+        );
+
+    const labels =
+
+        Object.keys(groups)
+
+        .sort(
+
+            (a, b) =>
+
+                new Date(a) -
+
+                new Date(b)
+
+        );
+
+    const values =
+
+        labels.map(date => {
+
+            const dayRecords =
+
+                groups[date];
+
+            if(dayRecords.length === 0) {
+
+                return 0;
+
+            }
+
+            return Math.max(
+
+                ...dayRecords.map(
+
+                    record =>
+
+                        weightToNumber(
+
+                            record.oneRM
+
+                        )
+
+                )
+
+            );
+
+        });
+
+    return {
+
+        labels:
+            labels.map(
+
+                weightFormatDate
+
+            ),
+
+        rawLabels:
+            labels,
+
+        values
+
+    };
+
+}
+
+/* ======================================================
+   날짜별 볼륨
+====================================================== */
+
+function getVolumeChartData() {
+
+    const records =
+
+        getWeightChartRecords();
+
+    const groups =
+
+        groupWeightRecordsByDate(
+
+            records
+
+        );
+
+    const labels =
+
+        Object.keys(groups)
+
+        .sort(
+
+            (a, b) =>
+
+                new Date(a) -
+
+                new Date(b)
+
+        );
+
+    const values =
+
+        labels.map(date => {
+
+            return groups[date]
+
+                .reduce(
+
+                    (sum, record) =>
+
+                        sum +
+
+                        weightToNumber(
+
+                            record.volume
+
+                        ),
+
+                    0
+
+                );
+
+        });
+
+    return {
+
+        labels:
+            labels.map(
+
+                weightFormatDate
+
+            ),
+
+        rawLabels:
+            labels,
+
+        values
+
+    };
+
+}
+
+/* ======================================================
+   부위별 차트 데이터
+====================================================== */
+
+function getBodyPartChartData() {
+
+    const statistics =
+
+        getBodyPartStatistics();
+
+    const entries =
+
+        Object.entries(statistics)
+
+        .filter(
+
+            ([, value]) =>
+
+                value > 0
+
+        );
+
+    return {
+
+        labels:
+            entries.map(
+
+                ([label]) =>
+
+                    label
+
+            ),
+
+        values:
+            entries.map(
+
+                ([, value]) =>
+
+                    value
+
+            )
+
+    };
+
+}
+
+/* ======================================================
+   월별 키 생성
+====================================================== */
+
+function getWeightMonthKey(dateValue) {
+
+    const date =
+
+        new Date(dateValue);
+
+    if(Number.isNaN(date.getTime())) {
+
+        return null;
+
+    }
+
+    const year =
+
+        date.getFullYear();
+
+    const month =
+
+        String(
+
+            date.getMonth() + 1
+
+        ).padStart(2, "0");
+
+    return `${year}-${month}`;
+
+}
+
+/* ======================================================
+   최근 12개월 목록
+====================================================== */
+
+function getRecentWeightMonths(count = 12) {
+
+    const months = [];
+
+    const today =
+
+        new Date();
+
+    today.setDate(1);
+
+    for(
+
+        let index = count - 1;
+
+        index >= 0;
+
+        index -= 1
+
+    ) {
+
+        const date =
+
+            new Date(
+
+                today.getFullYear(),
+
+                today.getMonth() -
+
+                index,
+
+                1
+
+            );
+
+        const key =
+
+            `${date.getFullYear()}-${String(
+                date.getMonth() + 1
+            ).padStart(2, "0")}`;
+
+        const label =
+
+            `${date.getFullYear()}.${String(
+                date.getMonth() + 1
+            ).padStart(2, "0")}`;
+
+        months.push({
+
+            key,
+
+            label
+
+        });
+
+    }
+
+    return months;
+
+}
+
+/* ======================================================
+   월별 운동 데이터
+====================================================== */
+
+function getMonthlyWeightData() {
+
+    const months =
+
+        getRecentWeightMonths(12);
+
+    const counter = {};
+
+    const volumeCounter = {};
+
+    months.forEach(month => {
+
+        counter[month.key] =
+            0;
+
+        volumeCounter[month.key] =
+            0;
+
+    });
+
+    getAllWeightStatisticsRecords()
+
+        .forEach(record => {
+
+            const key =
+
+                getWeightMonthKey(
+
+                    record.date
+
+                );
+
+            if(
+
+                !key ||
+
+                typeof counter[key] ===
+
+                "undefined"
+
+            ) {
+
+                return;
+
+            }
+
+            counter[key] +=
+                1;
+
+            volumeCounter[key] +=
+
+                weightToNumber(
+
+                    record.volume
+
+                );
+
+        });
+
+    return {
+
+        labels:
+            months.map(
+
+                month =>
+
+                    month.label
+
+            ),
+
+        counts:
+            months.map(
+
+                month =>
+
+                    counter[month.key]
+
+            ),
+
+        volumes:
+            months.map(
+
+                month =>
+
+                    volumeCounter[month.key]
+
+            )
+
+    };
+
+}
+
+/* ======================================================
+   운동별 성장 차트 데이터
+====================================================== */
+
+function getGrowthChartData() {
+
+    const ranking =
+
+        getExerciseGrowthRanking()
+
+        .filter(
+
+            item =>
+
+                item.recordCount >= 2
+
+        )
+
+        .slice(0, 8);
+
+    return {
+
+        labels:
+            ranking.map(
+
+                item =>
+
+                    item.exercise
+
+            ),
+
+        values:
+            ranking.map(
+
+                item =>
+
+                    item.growth
+
+            )
+
+    };
+
+}
+
+/* ======================================================
+   기본 차트 옵션
+====================================================== */
+
+function getWeightBaseChartOptions() {
+
+    return {
+
+        responsive:
+            true,
+
+        maintainAspectRatio:
+            false,
+
+        interaction: {
+
+            mode:
+                "index",
+
+            intersect:
+                false
+
+        },
+
+        plugins: {
+
+            legend: {
+
+                display:
+                    true,
+
+                position:
+                    "bottom"
+
+            },
+
+            tooltip: {
+
+                enabled:
+                    true
+
+            }
+
+        }
+
+    };
+
+}
+
+/* ======================================================
+   빈 차트 메시지
+====================================================== */
+
+function renderWeightChartEmpty(
+
+    canvas,
+
+    message =
+        "차트에 표시할 기록이 없습니다."
+
+) {
+
+    if(!canvas) {
+
+        return;
+
+    }
+
+    const wrapper =
+
+        canvas.parentElement;
+
+    if(!wrapper) {
+
+        return;
+
+    }
+
+    const existing =
+
+        wrapper.querySelector(
+
+            ".weight-chart-empty"
+
+        );
+
+    if(existing) {
+
+        existing.textContent =
+            message;
+
+        existing.hidden =
+            false;
+
+        canvas.hidden =
+            true;
+
+        return;
+
+    }
+
+    const empty =
+
+        document.createElement("div");
+
+    empty.className =
+
+        "weight-chart-empty";
+
+    empty.textContent =
+        message;
+
+    wrapper.appendChild(empty);
+
+    canvas.hidden =
+        true;
+
+}
+
+/* ======================================================
+   빈 메시지 제거
+====================================================== */
+
+function clearWeightChartEmpty(canvas) {
+
+    if(!canvas) {
+
+        return;
+
+    }
+
+    canvas.hidden =
+        false;
+
+    const wrapper =
+
+        canvas.parentElement;
+
+    const empty =
+
+        wrapper?.querySelector(
+
+            ".weight-chart-empty"
+
+        );
+
+    if(empty) {
+
+        empty.hidden =
+            true;
+
+    }
+
+}
+
+/* ======================================================
+   1RM 차트
+====================================================== */
+
+function renderOneRMChart() {
+
+    const canvas =
+
+        document.querySelector(
+
+            "#weightOneRMChart"
+
+        );
+
+    destroyWeightChart("oneRM");
+
+    if(!canvas) {
+
+        return;
+
+    }
+
+    if(!isWeightChartAvailable()) {
+
+        renderWeightChartEmpty(
+
+            canvas,
+
+            "Chart.js가 연결되지 않았습니다."
+
+        );
+
+        return;
+
+    }
+
+    const chartData =
+
+        getOneRMChartData();
+
+    if(chartData.values.length === 0) {
+
+        renderWeightChartEmpty(
+
+            canvas
+
+        );
+
+        return;
+
+    }
+
+    clearWeightChartEmpty(canvas);
+
+    weightCharts.oneRM =
 
         new Chart(
 
@@ -2702,51 +7067,63 @@ function renderMonthlyChart(){
 
             {
 
-                type:"bar",
+                type:
+                    "line",
 
-                data:{
+                data: {
 
-                    labels:chart.labels,
+                    labels:
+                        chartData.labels,
 
-                    datasets:[{
+                    datasets: [
 
-                        label:"훈련 횟수",
+                        {
 
-                        data:chart.data,
+                            label:
+                                "최고 예상 1RM",
 
-                        borderWidth:1,
+                            data:
+                                chartData.values,
 
-                        borderRadius:8
+                            tension:
+                                0.3,
 
-                    }]
+                            fill:
+                                false,
 
-                },
+                            pointRadius:
+                                4,
 
-                options:{
+                            pointHoverRadius:
+                                6,
 
-                    responsive:true,
-
-                    maintainAspectRatio:false,
-
-                    plugins:{
-
-                        legend:{
-
-                            display:false
+                            borderWidth:
+                                2
 
                         }
 
-                    },
+                    ]
 
-                    scales:{
+                },
 
-                        y:{
+                options: {
 
-                            beginAtZero:true,
+                    ...getWeightBaseChartOptions(),
 
-                            ticks:{
+                    scales: {
 
-                                precision:0
+                        y: {
+
+                            beginAtZero:
+                                true,
+
+                            title: {
+
+                                display:
+                                    true,
+
+                                text:
+                                    "kg"
 
                             }
 
@@ -2763,28 +7140,60 @@ function renderMonthlyChart(){
 }
 
 /* ======================================================
-   훈련 종류 비율
+   볼륨 차트
 ====================================================== */
 
-function renderTrainingChart(){
+function renderVolumeChart() {
 
-    const canvas=$("#trainingChart");
+    const canvas =
 
-    if(!canvas){
+        document.querySelector(
+
+            "#weightVolumeChart"
+
+        );
+
+    destroyWeightChart("volume");
+
+    if(!canvas) {
 
         return;
 
     }
 
-    if(dashboardCharts.training){
+    if(!isWeightChartAvailable()) {
 
-        dashboardCharts.training.destroy();
+        renderWeightChartEmpty(
+
+            canvas,
+
+            "Chart.js가 연결되지 않았습니다."
+
+        );
+
+        return;
 
     }
 
-    const chart = getTrainingTypeData();
+    const chartData =
 
-    dashboardCharts.training=
+        getVolumeChartData();
+
+    if(chartData.values.length === 0) {
+
+        renderWeightChartEmpty(
+
+            canvas
+
+        );
+
+        return;
+
+    }
+
+    clearWeightChartEmpty(canvas);
+
+    weightCharts.volume =
 
         new Chart(
 
@@ -2792,31 +7201,70 @@ function renderTrainingChart(){
 
             {
 
-                type:"doughnut",
+                type:
+                    "bar",
 
-                data:{
+                data: {
 
-                    labels:chart.labels,
+                    labels:
+                        chartData.labels,
 
-                    datasets:[{
+                    datasets: [
 
-                        data:chart.data
+                        {
 
-                    }]
+                            label:
+                                "일일 총 볼륨",
+
+                            data:
+                                chartData.values,
+
+                            borderWidth:
+                                1,
+
+                            borderRadius:
+                                6
+
+                        }
+
+                    ]
 
                 },
 
-                options:{
+                options: {
 
-                    responsive:true,
+                    ...getWeightBaseChartOptions(),
 
-                    maintainAspectRatio:false,
+                    plugins: {
 
-                    plugins:{
+                        ...getWeightBaseChartOptions()
+                            .plugins,
 
-                        legend:{
+                        legend: {
 
-                            position:"bottom"
+                            display:
+                                false
+
+                        }
+
+                    },
+
+                    scales: {
+
+                        y: {
+
+                            beginAtZero:
+                                true,
+
+                            title: {
+
+                                display:
+                                    true,
+
+                                text:
+                                    "kg"
+
+                            }
 
                         }
 
@@ -2831,14 +7279,465 @@ function renderTrainingChart(){
 }
 
 /* ======================================================
-   모든 차트
+   부위 비율 차트
 ====================================================== */
 
-function renderDashboardCharts(){
+function renderBodyPartChart() {
 
-    renderMonthlyChart();
+    const canvas =
 
-    renderTrainingChart();
+        document.querySelector(
+
+            "#weightBodyPartChart"
+
+        );
+
+    destroyWeightChart("bodyPart");
+
+    if(!canvas) {
+
+        return;
+
+    }
+
+    if(!isWeightChartAvailable()) {
+
+        renderWeightChartEmpty(
+
+            canvas,
+
+            "Chart.js가 연결되지 않았습니다."
+
+        );
+
+        return;
+
+    }
+
+    const chartData =
+
+        getBodyPartChartData();
+
+    if(chartData.values.length === 0) {
+
+        renderWeightChartEmpty(
+
+            canvas
+
+        );
+
+        return;
+
+    }
+
+    clearWeightChartEmpty(canvas);
+
+    weightCharts.bodyPart =
+
+        new Chart(
+
+            canvas,
+
+            {
+
+                type:
+                    "doughnut",
+
+                data: {
+
+                    labels:
+                        chartData.labels,
+
+                    datasets: [
+
+                        {
+
+                            label:
+                                "운동 횟수",
+
+                            data:
+                                chartData.values,
+
+                            borderWidth:
+                                1
+
+                        }
+
+                    ]
+
+                },
+
+                options: {
+
+                    ...getWeightBaseChartOptions(),
+
+                    cutout:
+                        "60%",
+
+                    plugins: {
+
+                        ...getWeightBaseChartOptions()
+                            .plugins,
+
+                        legend: {
+
+                            display:
+                                true,
+
+                            position:
+                                "bottom"
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        );
+
+}
+
+/* ======================================================
+   월별 차트
+====================================================== */
+
+function renderMonthlyWeightChart() {
+
+    const canvas =
+
+        document.querySelector(
+
+            "#weightMonthlyChart"
+
+        );
+
+    destroyWeightChart("monthly");
+
+    if(!canvas) {
+
+        return;
+
+    }
+
+    if(!isWeightChartAvailable()) {
+
+        renderWeightChartEmpty(
+
+            canvas,
+
+            "Chart.js가 연결되지 않았습니다."
+
+        );
+
+        return;
+
+    }
+
+    const chartData =
+
+        getMonthlyWeightData();
+
+    const hasData =
+
+        chartData.counts.some(
+
+            value =>
+
+                value > 0
+
+        );
+
+    if(!hasData) {
+
+        renderWeightChartEmpty(
+
+            canvas
+
+        );
+
+        return;
+
+    }
+
+    clearWeightChartEmpty(canvas);
+
+    weightCharts.monthly =
+
+        new Chart(
+
+            canvas,
+
+            {
+
+                type:
+                    "bar",
+
+                data: {
+
+                    labels:
+                        chartData.labels,
+
+                    datasets: [
+
+                        {
+
+                            label:
+                                "운동 기록 수",
+
+                            data:
+                                chartData.counts,
+
+                            borderWidth:
+                                1,
+
+                            borderRadius:
+                                6,
+
+                            yAxisID:
+                                "countAxis"
+
+                        },
+
+                        {
+
+                            label:
+                                "월간 볼륨",
+
+                            data:
+                                chartData.volumes,
+
+                            type:
+                                "line",
+
+                            tension:
+                                0.3,
+
+                            borderWidth:
+                                2,
+
+                            yAxisID:
+                                "volumeAxis"
+
+                        }
+
+                    ]
+
+                },
+
+                options: {
+
+                    ...getWeightBaseChartOptions(),
+
+                    scales: {
+
+                        countAxis: {
+
+                            beginAtZero:
+                                true,
+
+                            position:
+                                "left",
+
+                            ticks: {
+
+                                precision:
+                                    0
+
+                            },
+
+                            title: {
+
+                                display:
+                                    true,
+
+                                text:
+                                    "기록 수"
+
+                            }
+
+                        },
+
+                        volumeAxis: {
+
+                            beginAtZero:
+                                true,
+
+                            position:
+                                "right",
+
+                            grid: {
+
+                                drawOnChartArea:
+                                    false
+
+                            },
+
+                            title: {
+
+                                display:
+                                    true,
+
+                                text:
+                                    "볼륨(kg)"
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        );
+
+}
+
+/* ======================================================
+   성장률 차트
+====================================================== */
+
+function renderWeightGrowthChart() {
+
+    const canvas =
+
+        document.querySelector(
+
+            "#weightGrowthChart"
+
+        );
+
+    destroyWeightChart("growth");
+
+    if(!canvas) {
+
+        return;
+
+    }
+
+    if(!isWeightChartAvailable()) {
+
+        renderWeightChartEmpty(
+
+            canvas,
+
+            "Chart.js가 연결되지 않았습니다."
+
+        );
+
+        return;
+
+    }
+
+    const chartData =
+
+        getGrowthChartData();
+
+    if(chartData.values.length === 0) {
+
+        renderWeightChartEmpty(
+
+            canvas,
+
+            "운동별 성장률을 계산하려면 같은 운동 기록이 2개 이상 필요합니다."
+
+        );
+
+        return;
+
+    }
+
+    clearWeightChartEmpty(canvas);
+
+    weightCharts.growth =
+
+        new Chart(
+
+            canvas,
+
+            {
+
+                type:
+                    "bar",
+
+                data: {
+
+                    labels:
+                        chartData.labels,
+
+                    datasets: [
+
+                        {
+
+                            label:
+                                "예상 1RM 성장률",
+
+                            data:
+                                chartData.values,
+
+                            borderWidth:
+                                1,
+
+                            borderRadius:
+                                6
+
+                        }
+
+                    ]
+
+                },
+
+                options: {
+
+                    ...getWeightBaseChartOptions(),
+
+                    indexAxis:
+                        "y",
+
+                    scales: {
+
+                        x: {
+
+                            title: {
+
+                                display:
+                                    true,
+
+                                text:
+                                    "성장률(%)"
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        );
+
+}
+
+/* ======================================================
+   모든 차트 출력
+====================================================== */
+
+function renderWeightCharts() {
+
+    renderOneRMChart();
+
+    renderVolumeChart();
+
+    renderBodyPartChart();
+
+    renderMonthlyWeightChart();
+
+    renderWeightGrowthChart();
 
 }
 
@@ -2846,769 +7745,1457 @@ function renderDashboardCharts(){
    차트 새로고침
 ====================================================== */
 
-function refreshDashboardCharts(){
+function refreshWeightCharts() {
 
-    renderDashboardCards();
+    if(
 
-    renderDashboardCharts();
+        !getWeightSelectedAthlete()
 
-    renderRecentRecords();
+    ) {
 
-}
+        destroyAllWeightCharts();
 
-/* ======================================================
-   Export
-====================================================== */
-
-window.renderMonthlyChart =
-    renderMonthlyChart;
-
-window.renderTrainingChart =
-    renderTrainingChart;
-
-window.renderDashboardCharts =
-    renderDashboardCharts;
-
-window.refreshDashboardCharts =
-    refreshDashboardCharts;
-    /* ======================================================
-   app.js Part 3-3
-   Dashboard AI 분석 / 최고기록 / 연속훈련
-====================================================== */
-
-/* ======================================================
-   최근 N일 기록
-====================================================== */
-
-function getRecordsWithinDays(days){
-
-    const today = new Date();
-
-    const limit = new Date();
-
-    limit.setDate(today.getDate() - days);
-
-    return [
-
-        ...appData.sportsRecords,
-
-        ...appData.weightRecords,
-
-        ...appData.poseRecords
-
-    ].filter(record=>{
-
-        if(!record.date){
-
-            return false;
-
-        }
-
-        return new Date(record.date) >= limit;
-
-    });
-
-}
-
-/* ======================================================
-   최고 점수
-====================================================== */
-
-function getBestScore(){
-
-    const scores = [
-
-        ...appData.sportsRecords,
-
-        ...appData.poseRecords
-
-    ].map(record=>
-
-        Number(record.score || 0)
-
-    );
-
-    if(scores.length===0){
-
-        return 0;
+        return;
 
     }
 
-    return Math.max(...scores);
+    renderWeightCharts();
+
+}
+/* ======================================================
+   weight.js Part 4-2
+   Exercise Ranking / PR Ranking / Summary UI
+====================================================== */
+
+/* ======================================================
+   운동별 랭킹 데이터
+====================================================== */
+
+function getExerciseRanking() {
+
+    const ranking = {};
+
+    getAllWeightStatisticsRecords()
+
+        .forEach(record => {
+
+            const exercise =
+                record.exercise;
+
+            if(!exercise) {
+
+                return;
+
+            }
+
+            if(!ranking[exercise]) {
+
+                ranking[exercise] = {
+
+                    count:
+                        0,
+
+                    bestOneRM:
+                        0,
+
+                    bestWeight:
+                        0,
+
+                    totalWeight:
+                        0,
+
+                    totalVolume:
+                        0,
+
+                    totalRPE:
+                        0,
+
+                    rpeCount:
+                        0
+
+                };
+
+            }
+
+            const item =
+                ranking[exercise];
+
+            item.count +=
+                1;
+
+            item.bestOneRM =
+
+                Math.max(
+
+                    item.bestOneRM,
+
+                    weightToNumber(
+
+                        record.oneRM
+
+                    )
+
+                );
+
+            item.bestWeight =
+
+                Math.max(
+
+                    item.bestWeight,
+
+                    weightToNumber(
+
+                        record.weight
+
+                    )
+
+                );
+
+            item.totalWeight +=
+
+                weightToNumber(
+
+                    record.weight
+
+                );
+
+            item.totalVolume +=
+
+                weightToNumber(
+
+                    record.volume
+
+                );
+
+            if(
+
+                weightToNumber(
+
+                    record.rpe
+
+                ) > 0
+
+            ) {
+
+                item.totalRPE +=
+
+                    weightToNumber(
+
+                        record.rpe
+
+                    );
+
+                item.rpeCount +=
+                    1;
+
+            }
+
+        });
+
+    return Object.entries(ranking)
+
+        .map(([exercise, data]) => {
+
+            return {
+
+                exercise,
+
+                count:
+                    data.count,
+
+                bestOneRM:
+                    Number(
+
+                        data.bestOneRM
+
+                        .toFixed(1)
+
+                    ),
+
+                bestWeight:
+                    Number(
+
+                        data.bestWeight
+
+                        .toFixed(1)
+
+                    ),
+
+                averageWeight:
+
+                    data.count > 0
+
+                        ? Number(
+
+                            (
+
+                                data.totalWeight /
+
+                                data.count
+
+                            ).toFixed(1)
+
+                        )
+
+                        : 0,
+
+                totalVolume:
+                    Number(
+
+                        data.totalVolume
+
+                        .toFixed(1)
+
+                    ),
+
+                averageRPE:
+
+                    data.rpeCount > 0
+
+                        ? Number(
+
+                            (
+
+                                data.totalRPE /
+
+                                data.rpeCount
+
+                            ).toFixed(1)
+
+                        )
+
+                        : 0,
+
+                growth:
+                    getExerciseGrowth(
+
+                        exercise
+
+                    )
+
+            };
+
+        })
+
+        .sort((a, b) => {
+
+            if(
+
+                b.bestOneRM !==
+
+                a.bestOneRM
+
+            ) {
+
+                return (
+
+                    b.bestOneRM -
+
+                    a.bestOneRM
+
+                );
+
+            }
+
+            return (
+
+                b.totalVolume -
+
+                a.totalVolume
+
+            );
+
+        });
 
 }
 
 /* ======================================================
-   평균 점수
+   운동 랭킹 카드
 ====================================================== */
 
-function getOverallAverage(){
+function createExerciseRankingHTML(
 
-    const scores = [
+    item,
 
-        ...appData.sportsRecords,
+    index
 
-        ...appData.poseRecords
+) {
 
-    ].map(record=>
+    return `
 
-        Number(record.score || 0)
+<div class="ranking-card">
 
-    );
+    <div class="ranking-position">
 
-    if(scores.length===0){
+        ${index + 1}
 
-        return 0;
+    </div>
+
+    <div class="ranking-main">
+
+        <strong>
+
+            ${weightEscapeHTML(item.exercise)}
+
+        </strong>
+
+        <span>
+
+            ${item.count}회 수행
+
+        </span>
+
+    </div>
+
+    <div class="ranking-stat">
+
+        <span>PR</span>
+
+        <strong>
+
+            ${weightFormatNumber(item.bestOneRM)} kg
+
+        </strong>
+
+    </div>
+
+    <div class="ranking-stat">
+
+        <span>평균 중량</span>
+
+        <strong>
+
+            ${weightFormatNumber(item.averageWeight)} kg
+
+        </strong>
+
+    </div>
+
+    <div class="ranking-stat">
+
+        <span>총 볼륨</span>
+
+        <strong>
+
+            ${weightFormatNumber(item.totalVolume)} kg
+
+        </strong>
+
+    </div>
+
+    <div class="ranking-stat">
+
+        <span>성장률</span>
+
+        <strong>
+
+            ${item.growth > 0 ? "+" : ""}${item.growth}%
+
+        </strong>
+
+    </div>
+
+</div>
+
+`;
+
+}
+
+/* ======================================================
+   운동 랭킹 출력
+====================================================== */
+
+function renderExerciseRanking() {
+
+    const container =
+
+        document.querySelector(
+
+            "#exerciseRanking"
+
+        );
+
+    if(!container) {
+
+        return;
 
     }
 
-    const average =
+    const ranking =
+        getExerciseRanking();
 
-        scores.reduce(
+    if(ranking.length === 0) {
 
-            (a,b)=>a+b,
+        container.innerHTML = `
+
+<div class="empty-box">
+
+    운동 기록이 없습니다.
+
+</div>
+
+`;
+
+        return;
+
+    }
+
+    container.innerHTML =
+
+        ranking
+
+            .map(
+
+                createExerciseRankingHTML
+
+            )
+
+            .join("");
+
+}
+
+/* ======================================================
+   PR 기록 목록
+====================================================== */
+
+function getWeightPRRanking() {
+
+    const exercises =
+
+        [
+
+            ...new Set(
+
+                getAllWeightStatisticsRecords()
+
+                    .map(
+
+                        record =>
+
+                            record.exercise
+
+                    )
+
+                    .filter(Boolean)
+
+            )
+
+        ];
+
+    return exercises
+
+        .map(exercise => {
+
+            const record =
+                getExercisePR(exercise);
+
+            if(!record) {
+
+                return null;
+
+            }
+
+            return {
+
+                exercise,
+
+                date:
+                    record.date,
+
+                bodyPart:
+                    record.bodyPart,
+
+                weight:
+                    record.weight,
+
+                reps:
+                    record.reps,
+
+                sets:
+                    record.sets,
+
+                oneRM:
+                    record.oneRM,
+
+                volume:
+                    record.volume
+
+            };
+
+        })
+
+        .filter(Boolean)
+
+        .sort(
+
+            (a, b) =>
+
+                b.oneRM -
+
+                a.oneRM
+
+        );
+
+}
+
+/* ======================================================
+   PR 카드 HTML
+====================================================== */
+
+function createWeightPRCardHTML(
+
+    item,
+
+    index
+
+) {
+
+    return `
+
+<article class="weight-pr-card">
+
+    <div class="weight-pr-rank">
+
+        ${index + 1}
+
+    </div>
+
+    <div class="weight-pr-main">
+
+        <span>
+
+            ${weightEscapeHTML(item.bodyPart)}
+
+        </span>
+
+        <h4>
+
+            ${weightEscapeHTML(item.exercise)}
+
+        </h4>
+
+        <time>
+
+            ${weightFormatDate(item.date)}
+
+        </time>
+
+    </div>
+
+    <div class="weight-pr-result">
+
+        <strong>
+
+            ${weightFormatNumber(item.oneRM)} kg
+
+        </strong>
+
+        <span>
+
+            ${weightFormatNumber(item.weight)}kg
+            ×
+            ${item.reps}회
+            ×
+            ${item.sets}세트
+
+        </span>
+
+    </div>
+
+</article>
+
+`;
+
+}
+
+/* ======================================================
+   PR 목록 출력
+====================================================== */
+
+function renderWeightPRRanking() {
+
+    const container =
+
+        document.querySelector(
+
+            "#weightPRRanking"
+
+        );
+
+    if(!container) {
+
+        return;
+
+    }
+
+    const ranking =
+        getWeightPRRanking();
+
+    if(ranking.length === 0) {
+
+        container.innerHTML = `
+
+<div class="empty-box">
+
+    개인 최고 기록이 없습니다.
+
+</div>
+
+`;
+
+        return;
+
+    }
+
+    container.innerHTML =
+
+        ranking
+
+            .map(
+
+                createWeightPRCardHTML
+
+            )
+
+            .join("");
+
+}
+
+/* ======================================================
+   최근 기록 카드
+====================================================== */
+
+function renderLatestWeightRecord() {
+
+    const container =
+
+        document.querySelector(
+
+            "#latestWeightRecord"
+
+        );
+
+    if(!container) {
+
+        return;
+
+    }
+
+    const latest =
+        getLatestWeightRecord();
+
+    if(!latest) {
+
+        container.innerHTML = `
+
+<div class="empty-box">
+
+    최근 기록이 없습니다.
+
+</div>
+
+`;
+
+        return;
+
+    }
+
+    const record =
+        normalizeWeightRecord(
+
+            latest
+
+        );
+
+    container.innerHTML = `
+
+<div class="latest-weight-card">
+
+    <div>
+
+        <span>
+
+            ${weightEscapeHTML(record.bodyPart)}
+
+        </span>
+
+        <h3>
+
+            ${weightEscapeHTML(record.exercise)}
+
+        </h3>
+
+        <time>
+
+            ${weightFormatDate(record.date)}
+
+        </time>
+
+    </div>
+
+    <div>
+
+        <strong>
+
+            ${weightFormatNumber(record.weight)} kg
+
+        </strong>
+
+        <span>
+
+            ${record.reps}회 × ${record.sets}세트
+
+        </span>
+
+    </div>
+
+    <div>
+
+        <strong>
+
+            예상 1RM
+            ${weightFormatNumber(record.oneRM)} kg
+
+        </strong>
+
+        <span>
+
+            볼륨
+            ${weightFormatNumber(record.volume)} kg
+
+        </span>
+
+    </div>
+
+</div>
+
+`;
+
+}
+
+/* ======================================================
+   최고 기록 요약
+====================================================== */
+
+function renderBestWeightRecord() {
+
+    const container =
+
+        document.querySelector(
+
+            "#bestWeightRecord"
+
+        );
+
+    if(!container) {
+
+        return;
+
+    }
+
+    const best =
+        getWeightPersonalRecord();
+
+    if(!best) {
+
+        container.innerHTML = `
+
+<div class="empty-box">
+
+    최고 기록이 없습니다.
+
+</div>
+
+`;
+
+        return;
+
+    }
+
+    container.innerHTML = `
+
+<div class="best-weight-record-card">
+
+    <span>
+
+        최고 예상 1RM
+
+    </span>
+
+    <strong>
+
+        ${weightFormatNumber(best.oneRM)} kg
+
+    </strong>
+
+    <p>
+
+        ${weightEscapeHTML(best.exercise)}
+        ·
+        ${weightFormatDate(best.date)}
+
+    </p>
+
+</div>
+
+`;
+
+}
+
+/* ======================================================
+   운동 부위 요약
+====================================================== */
+
+function renderBodyPartSummary() {
+
+    const container =
+
+        document.querySelector(
+
+            "#weightBodyPartSummary"
+
+        );
+
+    if(!container) {
+
+        return;
+
+    }
+
+    const statistics =
+        getBodyPartStatistics();
+
+    const total =
+
+        Object.values(statistics)
+
+        .reduce(
+
+            (sum, value) =>
+
+                sum + value,
 
             0
 
-        ) / scores.length;
+        );
 
-    return Number(
+    if(total === 0) {
 
-        average.toFixed(1)
+        container.innerHTML = `
 
-    );
+<div class="empty-box">
 
-}
+    부위별 운동 기록이 없습니다.
 
-/* ======================================================
-   연속 훈련일
-====================================================== */
+</div>
 
-function calculateTrainingStreak(){
-
-    const dates = [
-
-        ...appData.sportsRecords,
-
-        ...appData.weightRecords,
-
-        ...appData.poseRecords
-
-    ]
-
-    .map(record=>record.date)
-
-    .filter(Boolean)
-
-    .map(date=>{
-
-        return new Date(date)
-
-        .toISOString()
-
-        .slice(0,10);
-
-    });
-
-    if(dates.length===0){
-
-        return 0;
-
-    }
-
-    const unique =
-
-        [...new Set(dates)]
-
-        .sort()
-
-        .reverse();
-
-    let streak = 1;
-
-    for(let i=1;i<unique.length;i++){
-
-        const prev =
-
-            new Date(unique[i-1]);
-
-        const current =
-
-            new Date(unique[i]);
-
-        const diff =
-
-            (prev-current)
-
-            /(1000*60*60*24);
-
-        if(diff===1){
-
-            streak++;
-
-        }else{
-
-            break;
-
-        }
-
-    }
-
-    return streak;
-
-}
-
-/* ======================================================
-   AI 분석
-====================================================== */
-
-function generateDashboardAnalysis(){
-
-    const recent7 =
-
-        getRecordsWithinDays(7).length;
-
-    const recent30 =
-
-        getRecordsWithinDays(30).length;
-
-    const average =
-
-        getOverallAverage();
-
-    const best =
-
-        getBestScore();
-
-    const streak =
-
-        calculateTrainingStreak();
-
-    let result = "";
-
-    if(recent7===0){
-
-        result +=
-        "최근 7일 동안 훈련 기록이 없습니다. ";
-
-    }else if(recent7>=5){
-
-        result +=
-        "최근 훈련 빈도가 매우 좋습니다. ";
-
-    }else{
-
-        result +=
-        "훈련 빈도를 조금 더 높이면 좋습니다. ";
-
-    }
-
-    if(average>=90){
-
-        result +=
-        "평균 점수가 매우 우수합니다. ";
-
-    }else if(average>=80){
-
-        result +=
-        "안정적인 수행 능력을 보이고 있습니다. ";
-
-    }else{
-
-        result +=
-        "기초 기술 보완이 필요합니다. ";
-
-    }
-
-    result +=
-
-`최고 점수 ${best}점 · 연속 훈련 ${streak}일 · 최근 30일 ${recent30}회`;
-
-    return result;
-
-}
-
-/* ======================================================
-   Dashboard AI 카드
-====================================================== */
-
-function renderDashboardAnalysis(){
-
-    const element =
-
-        $("#dashboardAnalysis");
-
-    if(!element){
+`;
 
         return;
 
     }
 
-    element.textContent =
+    container.innerHTML =
 
-        generateDashboardAnalysis();
+        BODY_PARTS
 
-}
+            .map(bodyPart => {
 
-/* ======================================================
-   Dashboard 전체 업데이트
-====================================================== */
+                const count =
 
-function updateDashboard(){
+                    weightToNumber(
 
-    renderDashboardCards();
+                        statistics[bodyPart]
 
-    renderRecentRecords();
+                    );
 
-    renderDashboardCharts();
+                const percentage =
 
-    renderDashboardAnalysis();
+                    total > 0
 
-}
+                        ? Number(
 
-/* ======================================================
-   자동 새로고침
-====================================================== */
+                            (
 
-function initializeDashboardAutoRefresh(){
+                                count /
 
-    setInterval(
+                                total *
 
-        ()=>{
+                                100
 
-            updateDashboard();
+                            ).toFixed(1)
 
-        },
+                        )
 
-        60000
+                        : 0;
 
-    );
+                return `
 
-}
+<div class="weight-body-part-summary-item">
 
-/* ======================================================
-   Dashboard 초기화
-====================================================== */
+    <div>
 
-function initializeDashboard(){
+        <strong>
 
-    updateDashboard();
+            ${weightEscapeHTML(bodyPart)}
 
-    initializeDashboardAutoRefresh();
+        </strong>
 
-}
+        <span>
 
-/* ======================================================
-   Export
-====================================================== */
+            ${count}회
 
-window.getBestScore =
-    getBestScore;
+        </span>
 
-window.getOverallAverage =
-    getOverallAverage;
+    </div>
 
-window.calculateTrainingStreak =
-    calculateTrainingStreak;
+    <div class="weight-body-part-progress">
 
-window.generateDashboardAnalysis =
-    generateDashboardAnalysis;
+        <span
+            style="width:${percentage}%"
+        ></span>
 
-window.renderDashboardAnalysis =
-    renderDashboardAnalysis;
+    </div>
 
-window.updateDashboard =
-    updateDashboard;
+    <small>
 
-window.initializeDashboard =
-    initializeDashboard;
-    /* ======================================================
-   app.js Part 4-1
-   공통 유틸리티
-====================================================== */
+        ${percentage}%
 
-"use strict";
+    </small>
 
-/* ======================================================
-   날짜 문자열
-====================================================== */
+</div>
 
-function getDateString(date = new Date()) {
+`;
 
-    const y = date.getFullYear();
+            })
 
-    const m = String(
-        date.getMonth() + 1
-    ).padStart(2, "0");
-
-    const d = String(
-        date.getDate()
-    ).padStart(2, "0");
-
-    return `${y}-${m}-${d}`;
+            .join("");
 
 }
 
 /* ======================================================
-   시간 문자열
+   주간 요약
 ====================================================== */
 
-function getTimeString(date = new Date()) {
+function getWeightWeeklySummary() {
 
-    return date.toLocaleTimeString(
-        "ko-KR",
-        {
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit"
-        }
-    );
+    const records =
+        getLastWeekRecords();
 
-}
+    const volume =
+        getWeightVolumeByRecords(
 
-/* ======================================================
-   날짜 + 시간
-====================================================== */
+            records
 
-function getDateTimeString(){
+        );
 
-    return `${getDateString()} ${getTimeString()}`;
+    const workoutDays =
+        getRecentWorkoutDayCount(7);
 
-}
+    const averageRPE =
+        getAverageRecentRPE(7);
 
-/* ======================================================
-   숫자 포맷
-====================================================== */
+    const exercises =
 
-function formatNumber(value){
+        new Set(
 
-    return Number(value || 0)
-        .toLocaleString("ko-KR");
+            records
 
-}
+                .map(
 
-/* ======================================================
-   퍼센트
-====================================================== */
+                    record =>
 
-function formatPercent(value){
+                        record.exercise
 
-    return `${Number(value || 0).toFixed(1)}%`;
+                )
 
-}
+                .filter(Boolean)
 
-/* ======================================================
-   랜덤 색상
-====================================================== */
+        ).size;
 
-function randomColor(){
+    return {
 
-    const colors = [
+        count:
+            records.length,
 
-        "#2563EB",
-        "#059669",
-        "#EA580C",
-        "#DC2626",
-        "#7C3AED",
-        "#0891B2"
+        volume,
 
-    ];
+        workoutDays,
 
-    return colors[
-        Math.floor(
-            Math.random() * colors.length
-        )
-    ];
+        averageRPE,
 
-}
-
-/* ======================================================
-   배열 평균
-====================================================== */
-
-function average(array){
-
-    if(array.length===0){
-
-        return 0;
-
-    }
-
-    return Number(
-
-        (
-
-            array.reduce(
-
-                (a,b)=>a+b,
-
-                0
-
-            )
-
-            / array.length
-
-        ).toFixed(1)
-
-    );
-
-}
-
-/* ======================================================
-   배열 합계
-====================================================== */
-
-function sum(array){
-
-    return array.reduce(
-
-        (a,b)=>a+b,
-
-        0
-
-    );
-
-}
-
-/* ======================================================
-   최고값
-====================================================== */
-
-function max(array){
-
-    if(array.length===0){
-
-        return 0;
-
-    }
-
-    return Math.max(...array);
-
-}
-
-/* ======================================================
-   최저값
-====================================================== */
-
-function min(array){
-
-    if(array.length===0){
-
-        return 0;
-
-    }
-
-    return Math.min(...array);
-
-}
-
-/* ======================================================
-   정렬
-====================================================== */
-
-function sortByDate(records){
-
-    return [...records].sort(
-
-        (a,b)=>{
-
-            return new Date(b.date)
-
-            -
-
-            new Date(a.date);
-
-        }
-
-    );
-
-}
-
-/* ======================================================
-   ID 검색
-====================================================== */
-
-function findById(list,id){
-
-    return list.find(
-
-        item=>item.id===id
-
-    );
-
-}
-
-/* ======================================================
-   삭제
-====================================================== */
-
-function removeById(list,id){
-
-    return list.filter(
-
-        item=>item.id!==id
-
-    );
-
-}
-
-/* ======================================================
-   Deep Copy
-====================================================== */
-
-function deepCopy(object){
-
-    return JSON.parse(
-
-        JSON.stringify(object)
-
-    );
-
-}
-
-/* ======================================================
-   LocalStorage 크기
-====================================================== */
-
-function getStorageSize(){
-
-    return new Blob(
-
-        [
-
-            JSON.stringify(appData)
-
-        ]
-
-    ).size;
-
-}
-
-/* ======================================================
-   Storage 정보
-====================================================== */
-
-function updateStorageInfo(){
-
-    const element =
-
-        $("#storageInfo");
-
-    if(!element){
-
-        return;
-
-    }
-
-    const kb =
-
-        (
-
-            getStorageSize()
-
-            /1024
-
-        ).toFixed(2);
-
-    element.textContent=
-
-        `${kb} KB`;
-
-}
-
-/* ======================================================
-   Export
-====================================================== */
-
-window.getDateString = getDateString;
-window.getTimeString = getTimeString;
-window.getDateTimeString = getDateTimeString;
-
-window.formatNumber = formatNumber;
-window.formatPercent = formatPercent;
-
-window.randomColor = randomColor;
-
-window.average = average;
-window.sum = sum;
-window.max = max;
-window.min = min;
-
-window.sortByDate = sortByDate;
-
-window.findById = findById;
-window.removeById = removeById;
-
-window.deepCopy = deepCopy;
-
-window.getStorageSize = getStorageSize;
-window.updateStorageInfo = updateStorageInfo;
-/* ======================================================
-   app.js Part 4-2
-   백업 / 복원 / CSV / 설정
-====================================================== */
-
-"use strict";
-
-/* ======================================================
-   JSON 백업
-====================================================== */
-
-function exportBackup(){
-
-    const backup = {
-
-        app: APP_NAME,
-
-        version: APP_VERSION,
-
-        exportedAt: new Date().toISOString(),
-
-        data: appData
+        exercises
 
     };
 
-    const blob = new Blob(
+}
 
-        [
+/* ======================================================
+   주간 요약 출력
+====================================================== */
 
-            JSON.stringify(
+function renderWeightWeeklySummary() {
 
-                backup,
+    const container =
 
-                null,
+        document.querySelector(
 
-                2
+            "#weightWeeklySummary"
 
-            )
+        );
 
-        ],
+    if(!container) {
 
-        {
+        return;
 
-            type:"application/json"
+    }
+
+    const summary =
+        getWeightWeeklySummary();
+
+    container.innerHTML = `
+
+<div class="weight-summary-card">
+
+    <span>최근 7일 기록</span>
+
+    <strong>
+
+        ${summary.count}개
+
+    </strong>
+
+</div>
+
+<div class="weight-summary-card">
+
+    <span>운동 일수</span>
+
+    <strong>
+
+        ${summary.workoutDays}일
+
+    </strong>
+
+</div>
+
+<div class="weight-summary-card">
+
+    <span>운동 종류</span>
+
+    <strong>
+
+        ${summary.exercises}개
+
+    </strong>
+
+</div>
+
+<div class="weight-summary-card">
+
+    <span>총 볼륨</span>
+
+    <strong>
+
+        ${weightFormatNumber(summary.volume)} kg
+
+    </strong>
+
+</div>
+
+<div class="weight-summary-card">
+
+    <span>평균 RPE</span>
+
+    <strong>
+
+        ${summary.averageRPE || "-"}
+
+    </strong>
+
+</div>
+
+`;
+
+}
+
+/* ======================================================
+   모든 요약 UI 출력
+====================================================== */
+
+function renderWeightSummaryUI() {
+
+    renderExerciseRanking();
+
+    renderWeightPRRanking();
+
+    renderLatestWeightRecord();
+
+    renderBestWeightRecord();
+
+    renderBodyPartSummary();
+
+    renderWeightWeeklySummary();
+
+}
+/* ======================================================
+   weight.js Part 5-1
+   CSV Import / Export / Print
+====================================================== */
+
+/* ======================================================
+   CSV 헤더
+====================================================== */
+
+const WEIGHT_CSV_HEADER = [
+
+    "날짜",
+
+    "선수ID",
+
+    "선수명",
+
+    "부위",
+
+    "운동",
+
+    "중량",
+
+    "횟수",
+
+    "세트",
+
+    "RPE",
+
+    "예상1RM",
+
+    "볼륨",
+
+    "강도",
+
+    "메모"
+
+];
+
+/* ======================================================
+   CSV 값 변환
+====================================================== */
+
+function escapeWeightCSVValue(value) {
+
+    const text =
+        String(value ?? "");
+
+    if(
+
+        text.includes(",") ||
+
+        text.includes('"') ||
+
+        text.includes("\n") ||
+
+        text.includes("\r")
+
+    ) {
+
+        return `"${text.replaceAll('"', '""')}"`;
+
+    }
+
+    return text;
+
+}
+
+/* ======================================================
+   CSV 한 줄 파싱
+====================================================== */
+
+function parseWeightCSVLine(line) {
+
+    const values = [];
+
+    let current = "";
+
+    let insideQuotes = false;
+
+    for(
+
+        let index = 0;
+
+        index < line.length;
+
+        index += 1
+
+    ) {
+
+        const character =
+            line[index];
+
+        const nextCharacter =
+            line[index + 1];
+
+        if(character === '"') {
+
+            if(
+
+                insideQuotes &&
+
+                nextCharacter === '"'
+
+            ) {
+
+                current += '"';
+
+                index += 1;
+
+            } else {
+
+                insideQuotes =
+                    !insideQuotes;
+
+            }
+
+            continue;
 
         }
 
+        if(
+
+            character === "," &&
+
+            !insideQuotes
+
+        ) {
+
+            values.push(current);
+
+            current = "";
+
+            continue;
+
+        }
+
+        current +=
+            character;
+
+    }
+
+    values.push(current);
+
+    return values;
+
+}
+
+/* ======================================================
+   CSV 생성
+====================================================== */
+
+function createWeightCSV() {
+
+    const records =
+        getAllWeightStatisticsRecords();
+
+    const rows = [
+
+        WEIGHT_CSV_HEADER
+
+            .map(
+
+                escapeWeightCSVValue
+
+            )
+
+            .join(",")
+
+    ];
+
+    records.forEach(record => {
+
+        const safeRecord =
+            normalizeWeightRecord(record);
+
+        rows.push(
+
+            [
+
+                safeRecord.date,
+
+                safeRecord.athleteId,
+
+                safeRecord.athleteName,
+
+                safeRecord.bodyPart,
+
+                safeRecord.exercise,
+
+                safeRecord.weight,
+
+                safeRecord.reps,
+
+                safeRecord.sets,
+
+                safeRecord.rpe,
+
+                safeRecord.oneRM,
+
+                safeRecord.volume,
+
+                safeRecord.intensity,
+
+                safeRecord.memo
+
+            ]
+
+            .map(
+
+                escapeWeightCSVValue
+
+            )
+
+            .join(",")
+
+        );
+
+    });
+
+    return `\uFEFF${rows.join("\n")}`;
+
+}
+
+/* ======================================================
+   파일 다운로드
+====================================================== */
+
+function downloadWeightFile(
+
+    content,
+
+    fileName,
+
+    type
+
+) {
+
+    const blob =
+
+        new Blob(
+
+            [content],
+
+            {
+
+                type
+
+            }
+
+        );
+
+    const url =
+
+        URL.createObjectURL(blob);
+
+    const link =
+
+        document.createElement("a");
+
+    link.href =
+        url;
+
+    link.download =
+        fileName;
+
+    document.body.appendChild(link);
+
+    link.click();
+
+    link.remove();
+
+    setTimeout(
+
+        () => {
+
+            URL.revokeObjectURL(url);
+
+        },
+
+        100
+
     );
 
-    const url = URL.createObjectURL(blob);
+}
 
-    const a = document.createElement("a");
+/* ======================================================
+   CSV 내보내기
+====================================================== */
 
-    a.href = url;
+function exportWeightCSV() {
 
-    a.download =
+    const athlete =
+        requireWeightAthlete();
 
-`${APP_NAME}_${getDateString()}.json`;
+    if(!athlete) {
 
-    a.click();
+        return;
 
-    URL.revokeObjectURL(url);
+    }
 
-    showToast(
+    const records =
+        getAllWeightStatisticsRecords();
 
-        "백업이 저장되었습니다.",
+    if(records.length === 0) {
+
+        weightShowToast(
+
+            "내보낼 웨이트 기록이 없습니다.",
+
+            "info"
+
+        );
+
+        return;
+
+    }
+
+    const csv =
+        createWeightCSV();
+
+    const athleteName =
+
+        athlete.name ||
+
+        athlete.athleteName ||
+
+        "athlete";
+
+    const safeName =
+
+        String(athleteName)
+
+        .replace(
+
+            /[\\/:*?"<>|]/g,
+
+            "_"
+
+        );
+
+    const fileName =
+
+        `weight_${safeName}_${weightGetTodayValue()}.csv`;
+
+    downloadWeightFile(
+
+        csv,
+
+        fileName,
+
+        "text/csv;charset=utf-8"
+
+    );
+
+    weightShowToast(
+
+        "CSV 파일을 내보냈습니다.",
 
         "success"
 
@@ -3617,62 +9204,99 @@ function exportBackup(){
 }
 
 /* ======================================================
-   JSON 복원
+   CSV 파일 선택
 ====================================================== */
 
-function importBackup(file){
+function requestWeightCSVImport() {
 
-    if(!file){
+    const input =
+
+        document.querySelector(
+
+            "#weightCSVInput"
+
+        );
+
+    if(input) {
+
+        input.value =
+            "";
+
+        input.click();
 
         return;
 
     }
 
-    const reader = new FileReader();
+    weightShowToast(
 
-    reader.onload = event=>{
+        "CSV 파일 입력 요소를 찾을 수 없습니다.",
 
-        try{
+        "error"
 
-            const backup = JSON.parse(
+    );
 
-                event.target.result
+}
+
+/* ======================================================
+   CSV 가져오기
+====================================================== */
+
+function importWeightCSV(file) {
+
+    if(!file) {
+
+        return;
+
+    }
+
+    const lowerName =
+
+        String(file.name || "")
+
+        .toLowerCase();
+
+    if(!lowerName.endsWith(".csv")) {
+
+        weightShowToast(
+
+            "CSV 파일만 가져올 수 있습니다.",
+
+            "error"
+
+        );
+
+        return;
+
+    }
+
+    const reader =
+
+        new FileReader();
+
+    reader.onload = event => {
+
+        try {
+
+            parseWeightCSV(
+
+                String(
+
+                    event.target?.result ||
+
+                    ""
+
+                )
 
             );
 
-            if(!backup.data){
+        } catch(error) {
 
-                throw new Error();
+            console.error(error);
 
-            }
+            weightShowToast(
 
-            appData = backup.data;
-
-            saveAppData();
-
-            refreshPage();
-
-            renderDashboard();
-
-            renderAthleteList();
-
-            updateSelectedAthleteDisplay();
-
-            showToast(
-
-                "복원이 완료되었습니다.",
-
-                "success"
-
-            );
-
-        }
-
-        catch{
-
-            showToast(
-
-                "백업 파일이 올바르지 않습니다.",
+                "CSV 파일을 처리하지 못했습니다.",
 
                 "error"
 
@@ -3682,183 +9306,397 @@ function importBackup(file){
 
     };
 
-    reader.readAsText(file);
+    reader.onerror = () => {
+
+        weightShowToast(
+
+            "CSV 파일을 읽지 못했습니다.",
+
+            "error"
+
+        );
+
+    };
+
+    reader.readAsText(
+
+        file,
+
+        "utf-8"
+
+    );
 
 }
 
 /* ======================================================
-   CSV 만들기
+   CSV 파싱
 ====================================================== */
 
-function convertArrayToCSV(data){
+function parseWeightCSV(text) {
 
-    if(!data.length){
+    const athlete =
+        requireWeightAthlete();
 
-        return "";
+    if(!athlete) {
+
+        return;
+
+    }
+
+    const lines =
+
+        String(text || "")
+
+        .replace(/^\uFEFF/, "")
+
+        .split(/\r?\n/)
+
+        .filter(
+
+            line =>
+
+                line.trim()
+
+        );
+
+    if(lines.length <= 1) {
+
+        weightShowToast(
+
+            "가져올 기록이 없습니다.",
+
+            "info"
+
+        );
+
+        return;
 
     }
 
     const header =
 
-        Object.keys(data[0]).join(",");
+        parseWeightCSVLine(
 
-    const rows =
+            lines.shift()
 
-        data.map(item=>{
+        );
 
-            return Object.values(item)
+    const headerMap = {};
 
-            .map(value=>{
+    header.forEach(
 
-                return `"${String(value ?? "")}"`;
+        (name, index) => {
 
-            })
+            headerMap[
 
-            .join(",");
+                String(name).trim()
 
-        });
-
-    return [
-
-        header,
-
-        ...rows
-
-    ].join("\n");
-
-}
-
-/* ======================================================
-   CSV 저장
-====================================================== */
-
-function exportCSV(data,fileName){
-
-    const csv =
-
-        convertArrayToCSV(data);
-
-    const blob = new Blob(
-
-        [
-
-            "\uFEFF"+csv
-
-        ],
-
-        {
-
-            type:"text/csv"
+            ] = index;
 
         }
 
     );
 
-    const url =
+    const getValue = (
 
-        URL.createObjectURL(blob);
+        values,
 
-    const a =
+        names
 
-        document.createElement("a");
+    ) => {
 
-    a.href = url;
+        for(const name of names) {
 
-    a.download =
+            const index =
+                headerMap[name];
 
-`${fileName}_${getDateString()}.csv`;
+            if(
 
-    a.click();
+                typeof index ===
 
-    URL.revokeObjectURL(url);
+                "number"
 
-}
+            ) {
 
-/* ======================================================
-   전체 초기화
-====================================================== */
+                return values[index] ?? "";
 
-function resetApplication(){
-
-    openConfirmModal({
-
-        title:"초기화",
-
-        message:
-
-"모든 데이터를 삭제하시겠습니까?",
-
-        confirmText:"삭제",
-
-        onConfirm:()=>{
-
-            localStorage.removeItem(
-
-                STORAGE_KEY
-
-            );
-
-            appData =
-
-                deepCopy(
-
-                    DEFAULT_APP_DATA
-
-                );
-
-            saveAppData();
-
-            location.reload();
+            }
 
         }
 
-    });
-
-}
-
-/* ======================================================
-   인쇄
-====================================================== */
-
-function printPage(){
-
-    window.print();
-
-}
-
-/* ======================================================
-   설정 저장
-====================================================== */
-
-function saveSettings(){
-
-    appData.settings = {
-
-        darkMode:
-
-        $("#darkMode")
-
-        ?.checked ?? true,
-
-        autoSave:
-
-        $("#autoSave")
-
-        ?.checked ?? true,
-
-        sound:
-
-        $("#sound")
-
-        ?.checked ?? true
+        return "";
 
     };
 
-    saveAppData();
+    const importedRecords = [];
 
-    showToast(
+    lines.forEach(line => {
 
-        "설정을 저장했습니다.",
+        const values =
+            parseWeightCSVLine(line);
+
+        const bodyPart =
+            getValue(
+
+                values,
+
+                ["부위", "운동부위"]
+
+            ).trim();
+
+        const exercise =
+            getValue(
+
+                values,
+
+                ["운동", "운동명"]
+
+            ).trim();
+
+        const weight =
+            weightToNumber(
+
+                getValue(
+
+                    values,
+
+                    ["중량", "무게"]
+
+                )
+
+            );
+
+        const reps =
+            weightToNumber(
+
+                getValue(
+
+                    values,
+
+                    ["횟수", "반복"]
+
+                )
+
+            );
+
+        const sets =
+            weightToNumber(
+
+                getValue(
+
+                    values,
+
+                    ["세트", "세트수"]
+
+                )
+
+            );
+
+        if(
+
+            !exercise ||
+
+            weight <= 0 ||
+
+            reps <= 0 ||
+
+            sets <= 0
+
+        ) {
+
+            return;
+
+        }
+
+        const date =
+
+            getValue(
+
+                values,
+
+                ["날짜", "운동날짜"]
+
+            ) ||
+
+            weightGetTodayValue();
+
+        const oneRM =
+
+            weightToNumber(
+
+                getValue(
+
+                    values,
+
+                    ["예상1RM", "1RM"]
+
+                )
+
+            ) ||
+
+            calculateOneRM(
+
+                weight,
+
+                reps
+
+            );
+
+        const volume =
+
+            weightToNumber(
+
+                getValue(
+
+                    values,
+
+                    ["볼륨", "Volume"]
+
+                )
+
+            ) ||
+
+            calculateVolume(
+
+                weight,
+
+                reps,
+
+                sets
+
+            );
+
+        const intensity =
+
+            weightToNumber(
+
+                getValue(
+
+                    values,
+
+                    ["강도", "Intensity"]
+
+                )
+
+            ) ||
+
+            calculateIntensity(
+
+                weight,
+
+                oneRM
+
+            );
+
+        const now =
+            new Date().toISOString();
+
+        importedRecords.push({
+
+            id:
+                weightCreateId("weight"),
+
+            athleteId:
+                athlete.id,
+
+            athleteName:
+
+                athlete.name ||
+
+                athlete.athleteName ||
+
+                getValue(
+
+                    values,
+
+                    ["선수명", "선수"]
+
+                ) ||
+
+                "",
+
+            date,
+
+            bodyPart,
+
+            exercise,
+
+            weight,
+
+            reps,
+
+            sets,
+
+            rpe:
+                weightToNumber(
+
+                    getValue(
+
+                        values,
+
+                        ["RPE", "rpe"]
+
+                    )
+
+                ),
+
+            oneRM,
+
+            volume,
+
+            intensity,
+
+            memo:
+                getValue(
+
+                    values,
+
+                    ["메모", "비고"]
+
+                ),
+
+            createdAt:
+                now,
+
+            updatedAt:
+                now
+
+        });
+
+    });
+
+    if(importedRecords.length === 0) {
+
+        weightShowToast(
+
+            "가져올 수 있는 기록이 없습니다.",
+
+            "error"
+
+        );
+
+        return;
+
+    }
+
+    const records =
+        ensureWeightDataStore();
+
+    records.unshift(
+
+        ...importedRecords
+
+    );
+
+    weightAutoSave();
+
+    refreshWeightPage();
+
+    weightRenderDashboard();
+
+    weightShowToast(
+
+        `${importedRecords.length}개의 기록을 가져왔습니다.`,
 
         "success"
 
@@ -3867,359 +9705,726 @@ function saveSettings(){
 }
 
 /* ======================================================
-   설정 불러오기
+   CSV 입력 변경 이벤트
 ====================================================== */
 
-function loadSettings(){
+function handleWeightCSVInput(event) {
 
-    const setting =
+    const file =
 
-        appData.settings || {};
+        event.target.files?.[0];
 
-    if($("#darkMode")){
+    importWeightCSV(file);
 
-        $("#darkMode").checked =
-
-            setting.darkMode ??
-
-            true;
-
-    }
-
-    if($("#autoSave")){
-
-        $("#autoSave").checked =
-
-            setting.autoSave ??
-
-            true;
-
-    }
-
-    if($("#sound")){
-
-        $("#sound").checked =
-
-            setting.sound ??
-
-            true;
-
-    }
+    event.target.value =
+        "";
 
 }
 
 /* ======================================================
-   자동 백업
+   인쇄용 행 HTML
 ====================================================== */
 
-function autoBackup(){
+function createWeightPrintRowHTML(record) {
 
-    if(
+    const safeRecord =
+        normalizeWeightRecord(record);
 
-        !appData.settings?.autoSave
+    return `
 
-    ){
+<tr>
+
+    <td>
+        ${weightEscapeHTML(
+            weightFormatDate(
+                safeRecord.date
+            )
+        )}
+    </td>
+
+    <td>
+        ${weightEscapeHTML(
+            safeRecord.bodyPart
+        )}
+    </td>
+
+    <td>
+        ${weightEscapeHTML(
+            safeRecord.exercise
+        )}
+    </td>
+
+    <td>
+        ${weightFormatNumber(
+            safeRecord.weight
+        )} kg
+    </td>
+
+    <td>
+        ${safeRecord.reps}회
+    </td>
+
+    <td>
+        ${safeRecord.sets}세트
+    </td>
+
+    <td>
+        ${weightFormatNumber(
+            safeRecord.oneRM
+        )} kg
+    </td>
+
+    <td>
+        ${weightFormatNumber(
+            safeRecord.volume
+        )} kg
+    </td>
+
+    <td>
+        ${safeRecord.rpe || "-"}
+    </td>
+
+</tr>
+
+`;
+
+}
+
+/* ======================================================
+   인쇄 리포트
+====================================================== */
+
+function printWeightReport() {
+
+    const athlete =
+        requireWeightAthlete();
+
+    if(!athlete) {
 
         return;
 
     }
 
-    saveAppData();
+    const records =
+        getFilteredWeightRecords();
 
-    updateStorageInfo();
+    if(records.length === 0) {
 
-}
+        weightShowToast(
 
-/* ======================================================
-   5분 자동 저장
-====================================================== */
+            "인쇄할 웨이트 기록이 없습니다.",
 
-setInterval(
+            "info"
 
-    autoBackup,
-
-    300000
-
-);
-
-/* ======================================================
-   Export
-====================================================== */
-
-window.exportBackup = exportBackup;
-window.importBackup = importBackup;
-
-window.exportCSV = exportCSV;
-
-window.convertArrayToCSV =
-    convertArrayToCSV;
-
-window.resetApplication =
-    resetApplication;
-
-window.printPage = printPage;
-
-window.saveSettings =
-    saveSettings;
-
-window.loadSettings =
-    loadSettings;
-
-window.autoBackup =
-    autoBackup;
-    /* ======================================================
-   app.js Part 4-3
-   최종 마무리
-   Error Handler / Logger / Version / Performance
-====================================================== */
-
-"use strict";
-
-/* ======================================================
-   앱 정보
-====================================================== */
-
-const APP_INFO = {
-
-    name: APP_NAME,
-
-    version: APP_VERSION,
-
-    developer: "Seolcheon High School Sports Science Center",
-
-    buildDate: "2026-07-31"
-
-};
-
-/* ======================================================
-   Logger
-====================================================== */
-
-const Logger = {
-
-    history: [],
-
-    write(type, message){
-
-        const log = {
-
-            time: getDateTimeString(),
-
-            type,
-
-            message
-
-        };
-
-        this.history.push(log);
-
-        console[type === "error" ? "error" : "log"](
-            `[${log.time}] ${message}`
         );
 
-    },
-
-    info(message){
-
-        this.write("log", message);
-
-    },
-
-    warn(message){
-
-        this.write("warn", message);
-
-    },
-
-    error(message){
-
-        this.write("error", message);
+        return;
 
     }
 
-};
+    const summary =
+        getWeightDashboardData();
 
-/* ======================================================
-   전역 Error
-====================================================== */
+    const athleteName =
 
-window.addEventListener(
+        athlete.name ||
 
-    "error",
+        athlete.athleteName ||
 
-    event=>{
+        "선수";
 
-        Logger.error(
+    const printWindow =
 
-            event.message
+        window.open(
+
+            "",
+
+            "_blank",
+
+            "width=1100,height=800"
 
         );
 
-        showToast(
+    if(!printWindow) {
 
-            "오류가 발생했습니다.",
+        weightShowToast(
+
+            "팝업이 차단되어 인쇄 창을 열지 못했습니다.",
 
             "error"
 
         );
 
+        return;
+
     }
 
-);
+    printWindow.document.write(`
 
-/* ======================================================
-   Promise Error
-====================================================== */
+<!DOCTYPE html>
+
+<html lang="ko">
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>
+    ${weightEscapeHTML(athleteName)} 웨이트 리포트
+</title>
+
+<style>
+
+body {
+
+    margin: 0;
+
+    padding: 32px;
+
+    font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+    color: #111827;
+
+}
+
+h1 {
+
+    margin: 0 0 8px;
+
+}
+
+.report-date {
+
+    margin-bottom: 24px;
+
+    color: #6b7280;
+
+}
+
+.summary {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, 1fr);
+
+    gap: 12px;
+
+    margin-bottom: 24px;
+
+}
+
+.summary div {
+
+    padding: 14px;
+
+    border: 1px solid #d1d5db;
+
+    border-radius: 10px;
+
+}
+
+.summary span {
+
+    display: block;
+
+    margin-bottom: 6px;
+
+    color: #6b7280;
+
+    font-size: 13px;
+
+}
+
+.summary strong {
+
+    font-size: 18px;
+
+}
+
+table {
+
+    width: 100%;
+
+    border-collapse: collapse;
+
+    font-size: 13px;
+
+}
+
+th,
+td {
+
+    padding: 9px;
+
+    border: 1px solid #d1d5db;
+
+    text-align: center;
+
+}
+
+th {
+
+    background: #f3f4f6;
+
+}
+
+@media print {
+
+    body {
+
+        padding: 0;
+
+    }
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>
+    ${weightEscapeHTML(athleteName)} 웨이트 리포트
+</h1>
+
+<p class="report-date">
+    출력일: ${weightFormatDate(weightGetTodayValue())}
+</p>
+
+<section class="summary">
+
+    <div>
+
+        <span>총 기록</span>
+
+        <strong>
+            ${summary.totalWorkout}개
+        </strong>
+
+    </div>
+
+    <div>
+
+        <span>총 볼륨</span>
+
+        <strong>
+            ${weightFormatNumber(
+                summary.totalVolume
+            )} kg
+        </strong>
+
+    </div>
+
+    <div>
+
+        <span>최고 예상 1RM</span>
+
+        <strong>
+            ${weightFormatNumber(
+                summary.bestOneRM
+            )} kg
+        </strong>
+
+    </div>
+
+    <div>
+
+        <span>평균 RPE</span>
+
+        <strong>
+            ${summary.averageRPE || "-"}
+        </strong>
+
+    </div>
+
+</section>
+
+<table>
+
+<thead>
+
+<tr>
+
+    <th>날짜</th>
+
+    <th>부위</th>
+
+    <th>운동</th>
+
+    <th>중량</th>
+
+    <th>횟수</th>
+
+    <th>세트</th>
+
+    <th>예상 1RM</th>
+
+    <th>볼륨</th>
+
+    <th>RPE</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+${records
+    .map(createWeightPrintRowHTML)
+    .join("")}
+
+</tbody>
+
+</table>
+
+<script>
 
 window.addEventListener(
+    "load",
+    function() {
 
-    "unhandledrejection",
-
-    event=>{
-
-        Logger.error(
-
-            String(event.reason)
-
-        );
+        window.print();
 
     }
-
 );
 
+<\/script>
+
+</body>
+
+</html>
+
+`);
+
+    printWindow.document.close();
+
+}
 /* ======================================================
-   성능 측정
+   weight.js Part 5-2
+   Refresh / Initialize / Events / Export
 ====================================================== */
 
-function measurePerformance(name, callback){
+/* ======================================================
+   모듈 초기화 상태
+====================================================== */
 
-    const start = performance.now();
+let weightModuleInitialized =
+    false;
 
-    callback();
+/* ======================================================
+   전체 화면 새로고침
+====================================================== */
 
-    const end = performance.now();
+function refreshWeightPage() {
 
-    Logger.info(
+    renderWeightPage();
 
-`${name} : ${(end-start).toFixed(2)}ms`
+    renderWeightDashboardCards();
+
+    renderWeightAnalysis();
+
+    renderWeightAIReport();
+
+    renderWeightSummaryUI();
+
+    refreshWeightCharts();
+
+    updateWeightPreview();
+
+}
+
+/* ======================================================
+   선수 변경 시 새로고침
+====================================================== */
+
+function handleWeightAthleteChange() {
+
+    weightState.editingId =
+        null;
+
+    weightState.page =
+        1;
+
+    resetWeightForm();
+
+    updateWeightExerciseFilterOptions();
+
+    refreshWeightPage();
+
+}
+
+/* ======================================================
+   목록 이벤트 초기화
+====================================================== */
+
+function initializeWeightListEvents() {
+
+    const elements =
+        getWeightElements();
+
+    elements.list?.addEventListener(
+
+        "click",
+
+        handleWeightListClick
 
     );
 
 }
 
 /* ======================================================
-   앱 정보 출력
+   페이지네이션 이벤트 초기화
 ====================================================== */
 
-function showAppInfo(){
+function initializeWeightPaginationEvents() {
 
-    console.table(APP_INFO);
+    const elements =
+        getWeightElements();
 
-    updateStorageInfo();
+    elements.pagination?.addEventListener(
+
+        "click",
+
+        handleWeightPaginationClick
+
+    );
+
+    elements.previousPage?.addEventListener(
+
+        "click",
+
+        goToPreviousWeightPage
+
+    );
+
+    elements.nextPage?.addEventListener(
+
+        "click",
+
+        goToNextWeightPage
+
+    );
 
 }
 
 /* ======================================================
-   개발자 명령
+   폼 이벤트 초기화
 ====================================================== */
 
-window.DevTools = {
+function initializeWeightFormEvents() {
 
-    appData,
+    const elements =
+        getWeightElements();
 
-    clear(){
+    elements.form?.addEventListener(
 
-        console.clear();
+        "submit",
 
-    },
+        handleWeightFormSubmit
 
-    storage(){
+    );
 
-        console.log(appData);
+    elements.cancel?.addEventListener(
 
-    },
+        "click",
 
-    logs(){
+        cancelWeightEdit
 
-        console.table(
-
-            Logger.history
-
-        );
-
-    },
-
-    version(){
-
-        console.table(APP_INFO);
-
-    }
-
-};
-
-/* ======================================================
-   모듈 초기화
-====================================================== */
-
-function initializeModules(){
-
-    try{
-
-        initializeDashboard?.();
-
-        initializeAthleteModule?.();
-
-        initializeSportsModule?.();
-
-        initializeWeightModule?.();
-
-        initializePoseModule?.();
-
-        initializeRecordsModule?.();
-
-        initializeReportModule?.();
-
-        loadSettings?.();
-
-        Logger.info(
-
-            "모든 모듈 초기화 완료"
-
-        );
-
-    }
-
-    catch(error){
-
-        Logger.error(
-
-            error.message
-
-        );
-
-    }
+    );
 
 }
 
 /* ======================================================
-   앱 시작
+   CSV 이벤트 초기화
 ====================================================== */
 
-function startApplication(){
+function initializeWeightCSVEvents() {
 
-    measurePerformance(
+    const csvInput =
 
-        "Application Start",
+        document.querySelector(
 
-        ()=>{
+            "#weightCSVInput"
 
-            initializeModules();
+        );
 
-            renderDashboard();
+    const importButton =
 
-            refreshPage();
+        document.querySelector(
 
-            updateStorageInfo();
+            "#weightImportButton"
+
+        );
+
+    const exportButton =
+
+        document.querySelector(
+
+            "#weightExportButton"
+
+        );
+
+    csvInput?.addEventListener(
+
+        "change",
+
+        handleWeightCSVInput
+
+    );
+
+    importButton?.addEventListener(
+
+        "click",
+
+        requestWeightCSVImport
+
+    );
+
+    exportButton?.addEventListener(
+
+        "click",
+
+        exportWeightCSV
+
+    );
+
+}
+
+/* ======================================================
+   인쇄 이벤트 초기화
+====================================================== */
+
+function initializeWeightPrintEvents() {
+
+    const printButton =
+
+        document.querySelector(
+
+            "#weightPrintButton"
+
+        );
+
+    printButton?.addEventListener(
+
+        "click",
+
+        printWeightReport
+
+    );
+
+}
+
+/* ======================================================
+   필터 초기화 버튼
+====================================================== */
+
+function initializeWeightResetFilterEvent() {
+
+    const buttons =
+
+        document.querySelectorAll(
+
+            "[data-action='reset-weight-filters']"
+
+        );
+
+    buttons.forEach(button => {
+
+        button.addEventListener(
+
+            "click",
+
+            resetWeightFilters
+
+        );
+
+    });
+
+}
+
+/* ======================================================
+   전체 삭제 버튼
+====================================================== */
+
+function initializeWeightDeleteAllEvent() {
+
+    const buttons =
+
+        document.querySelectorAll(
+
+            "[data-action='delete-all-weight-records']"
+
+        );
+
+    buttons.forEach(button => {
+
+        button.addEventListener(
+
+            "click",
+
+            requestDeleteAllWeightRecords
+
+        );
+
+    });
+
+}
+
+/* ======================================================
+   페이지 크기 이벤트
+====================================================== */
+
+function initializeWeightPageSizeEvent() {
+
+    const select =
+
+        document.querySelector(
+
+            "#weightPageSize"
+
+        );
+
+    if(!select) {
+
+        return;
+
+    }
+
+    if(select.value) {
+
+        weightState.pageSize =
+
+            Math.max(
+
+                1,
+
+                weightToNumber(
+
+                    select.value
+
+                ) || 10
+
+            );
+
+    }
+
+    select.addEventListener(
+
+        "change",
+
+        event => {
+
+            setWeightPageSize(
+
+                event.target.value
+
+            );
 
         }
 
@@ -4228,62 +10433,471 @@ function startApplication(){
 }
 
 /* ======================================================
-   종료
+   공통 action 이벤트
 ====================================================== */
 
-window.addEventListener(
+function handleWeightDocumentAction(event) {
 
-    "beforeunload",
+    const button =
 
-    ()=>{
+        event.target.closest(
 
-        autoBackup();
-
-        Logger.info(
-
-            "Application Closed"
+            "[data-weight-action]"
 
         );
 
-    }
+    if(!button) {
 
-);
-
-/* ======================================================
-   DOM Ready
-====================================================== */
-
-document.addEventListener(
-
-    "DOMContentLoaded",
-
-    ()=>{
-
-        startApplication();
-
-        showAppInfo();
+        return;
 
     }
 
-);
+    const action =
+
+        button.dataset.weightAction;
+
+    switch(action) {
+
+        case "import":
+
+            requestWeightCSVImport();
+
+            break;
+
+        case "export":
+
+            exportWeightCSV();
+
+            break;
+
+        case "print":
+
+            printWeightReport();
+
+            break;
+
+        case "reset-filter":
+
+            resetWeightFilters();
+
+            break;
+
+        case "delete-all":
+
+            requestDeleteAllWeightRecords();
+
+            break;
+
+        case "refresh":
+
+            refreshWeightPage();
+
+            break;
+
+    }
+
+}
 
 /* ======================================================
-   Export
+   선수 변경 이벤트 감지
 ====================================================== */
 
-window.Logger = Logger;
+function initializeWeightAthleteEvents() {
 
-window.APP_INFO = APP_INFO;
+    document.addEventListener(
 
-window.measurePerformance =
-    measurePerformance;
+        "athleteChanged",
 
-window.showAppInfo =
-    showAppInfo;
+        handleWeightAthleteChange
 
-window.startApplication =
-    startApplication;
+    );
+
+    document.addEventListener(
+
+        "selectedAthleteChanged",
+
+        handleWeightAthleteChange
+
+    );
+
+}
 
 /* ======================================================
-   app.js COMPLETE
+   창 크기 변경 시 차트 보정
 ====================================================== */
+
+function initializeWeightResizeEvent() {
+
+    let resizeTimer =
+        null;
+
+    window.addEventListener(
+
+        "resize",
+
+        () => {
+
+            clearTimeout(
+
+                resizeTimer
+
+            );
+
+            resizeTimer =
+
+                setTimeout(
+
+                    () => {
+
+                        Object.values(
+
+                            weightCharts
+
+                        ).forEach(chart => {
+
+                            if(
+
+                                chart &&
+
+                                typeof chart.resize ===
+
+                                "function"
+
+                            ) {
+
+                                chart.resize();
+
+                            }
+
+                        });
+
+                    },
+
+                    150
+
+                );
+
+        }
+
+    );
+
+}
+
+/* ======================================================
+   초기 입력값 반영
+====================================================== */
+
+function initializeWeightStateFromDOM() {
+
+    const elements =
+        getWeightElements();
+
+    if(elements.search) {
+
+        weightState.searchKeyword =
+
+            elements.search.value ||
+
+            "";
+
+    }
+
+    if(elements.bodyPartFilter) {
+
+        weightState.selectedBodyPart =
+
+            elements.bodyPartFilter.value ||
+
+            "";
+
+    }
+
+    if(elements.exerciseFilter) {
+
+        weightState.selectedExercise =
+
+            elements.exerciseFilter.value ||
+
+            "";
+
+    }
+
+    if(elements.sort) {
+
+        weightState.sortType =
+
+            elements.sort.value ||
+
+            "date-desc";
+
+    }
+
+}
+
+/* ======================================================
+   웨이트 모듈 초기화
+====================================================== */
+
+function initializeWeightModule() {
+
+    if(weightModuleInitialized) {
+
+        refreshWeightPage();
+
+        return;
+
+    }
+
+    ensureWeightDataStore();
+
+    normalizeAllWeightRecords();
+
+    initializeWeightDate();
+
+    initializeWeightBodyPartOptions();
+
+    updateExerciseOptions();
+
+    initializeWeightFilterOptions();
+
+    updateWeightExerciseFilterOptions();
+
+    initializeWeightStateFromDOM();
+
+    initializeWeightInputs();
+
+    initializeWeightFormEvents();
+
+    initializeWeightListEvents();
+
+    initializeWeightPaginationEvents();
+
+    initializeWeightSearch();
+
+    initializeWeightFilter();
+
+    initializeWeightExerciseFilter();
+
+    initializeWeightSort();
+
+    initializeWeightCSVEvents();
+
+    initializeWeightPrintEvents();
+
+    initializeWeightResetFilterEvent();
+
+    initializeWeightDeleteAllEvent();
+
+    initializeWeightPageSizeEvent();
+
+    initializeWeightAthleteEvents();
+
+    initializeWeightResizeEvent();
+
+    document.addEventListener(
+
+        "click",
+
+        handleWeightDocumentAction
+
+    );
+
+    weightModuleInitialized =
+        true;
+
+    resetWeightForm();
+
+    refreshWeightPage();
+
+}
+
+/* ======================================================
+   모듈 해제
+====================================================== */
+
+function destroyWeightModule() {
+
+    destroyAllWeightCharts();
+
+    weightModuleInitialized =
+        false;
+
+}
+
+/* ======================================================
+   DOM 준비 후 자동 초기화
+====================================================== */
+
+function autoInitializeWeightModule() {
+
+    const weightPageExists =
+
+        Boolean(
+
+            document.querySelector(
+
+                "#weightForm"
+
+            ) ||
+
+            document.querySelector(
+
+                "#weightList"
+
+            )
+
+        );
+
+    if(!weightPageExists) {
+
+        return;
+
+    }
+
+    initializeWeightModule();
+
+}
+
+if(
+
+    document.readyState ===
+
+    "loading"
+
+) {
+
+    document.addEventListener(
+
+        "DOMContentLoaded",
+
+        autoInitializeWeightModule,
+
+        {
+
+            once:
+                true
+
+        }
+
+    );
+
+} else {
+
+    autoInitializeWeightModule();
+
+}
+
+/* ======================================================
+   전역 함수 Export
+====================================================== */
+
+window.weightState =
+    weightState;
+
+window.BODY_PARTS =
+    BODY_PARTS;
+
+window.EXERCISE_LIST =
+    EXERCISE_LIST;
+
+window.initializeWeightModule =
+    initializeWeightModule;
+
+window.destroyWeightModule =
+    destroyWeightModule;
+
+window.refreshWeightPage =
+    refreshWeightPage;
+
+window.renderWeightPage =
+    renderWeightPage;
+
+window.renderWeightDashboardCards =
+    renderWeightDashboardCards;
+
+window.renderWeightAnalysis =
+    renderWeightAnalysis;
+
+window.renderWeightAIReport =
+    renderWeightAIReport;
+
+window.renderWeightCharts =
+    renderWeightCharts;
+
+window.refreshWeightCharts =
+    refreshWeightCharts;
+
+window.renderWeightSummaryUI =
+    renderWeightSummaryUI;
+
+window.saveWeightRecord =
+    saveWeightRecord;
+
+window.updateWeightRecord =
+    updateWeightRecord;
+
+window.startEditWeightRecord =
+    startEditWeightRecord;
+
+window.cancelWeightEdit =
+    cancelWeightEdit;
+
+window.deleteWeightRecord =
+    deleteWeightRecord;
+
+window.requestDeleteWeightRecord =
+    requestDeleteWeightRecord;
+
+window.deleteAllWeightRecords =
+    deleteAllWeightRecords;
+
+window.requestDeleteAllWeightRecords =
+    requestDeleteAllWeightRecords;
+
+window.resetWeightForm =
+    resetWeightForm;
+
+window.resetWeightFilters =
+    resetWeightFilters;
+
+window.setWeightPageSize =
+    setWeightPageSize;
+
+window.goToWeightPage =
+    goToWeightPage;
+
+window.exportWeightCSV =
+    exportWeightCSV;
+
+window.importWeightCSV =
+    importWeightCSV;
+
+window.requestWeightCSVImport =
+    requestWeightCSVImport;
+
+window.printWeightReport =
+    printWeightReport;
+
+window.calculateOneRM =
+    calculateOneRM;
+
+window.calculateVolume =
+    calculateVolume;
+
+window.calculateIntensity =
+    calculateIntensity;
+
+window.getCurrentWeightRecords =
+    getCurrentWeightRecords;
+
+window.getFilteredWeightRecords =
+    getFilteredWeightRecords;
+
+window.getWeightDashboardData =
+    getWeightDashboardData;
+
+window.createWeightAnalysisData =
+    createWeightAnalysisData;
+
+window.generateWeightAnalysis =
+    generateWeightAnalysis;
