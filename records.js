@@ -1,121 +1,276 @@
+/* ==========================================
+   records.js Part 1
+   통합 기록 조회
+========================================== */
+
 "use strict";
 
-/* ==========================================================
-   records.js
-   설천고 스포츠과학 훈련센터
-========================================================== */
+/* ---------- 모든 기록 ---------- */
 
-const RecordsModule = (() => {
+function getAllRecords(){
 
-const state = {
+    const records=[];
 
-    athlete: "",
+    appData.sportsRecords.forEach(record=>{
 
-    type: "",
+        records.push({
 
-    keyword: "",
+            id:record.id,
 
-    records: []
+            type:"sports",
 
-};
+            date:record.date,
 
-const DOM = {};
+            athleteId:record.athleteId,
 
-/* ==========================================================
-   DOM
-========================================================== */
+            title:record.type,
 
-function cacheDOM(){
+            score:record.score || "-"
 
-    DOM.athleteFilter=document.getElementById("recordAthleteFilter");
+        });
 
-    DOM.typeFilter=document.getElementById("recordTypeFilter");
+    });
 
-    DOM.searchInput=document.getElementById("recordSearchInput");
+    appData.weightRecords.forEach(record=>{
 
-    DOM.searchButton=document.getElementById("searchRecordsButton");
+        records.push({
 
-    DOM.resetButton=document.getElementById("resetRecordFilterButton");
+            id:record.id,
 
-    DOM.exportButton=document.getElementById("exportRecordsButton");
+            type:"weight",
 
-    DOM.table=document.getElementById("recordsList");
+            date:record.date,
 
-    DOM.count=document.getElementById("recordCountText");
+            athleteId:record.athleteId,
+
+            title:record.exercise,
+
+            score:record.oneRM+"kg"
+
+        });
+
+    });
+
+    appData.poseRecords.forEach(record=>{
+
+        records.push({
+
+            id:record.id,
+
+            type:"pose",
+
+            date:record.date,
+
+            athleteId:record.athleteId,
+
+            title:record.movement,
+
+            score:record.score
+
+        });
+
+    });
+
+    return records.sort(
+
+        (a,b)=>new Date(b.date)-new Date(a.date)
+
+    );
 
 }
 
-/* ==========================================================
-   Load All Records
-========================================================== */
+/* ---------- 목록 출력 ---------- */
 
-function loadRecords(){
+function renderRecordsPage(){
 
-    state.records=[];
+    const tbody=$("#recordsList");
 
-    if(window.appData){
+    if(!tbody) return;
 
-        (appData.sportsRecords||[]).forEach(item=>{
+    tbody.innerHTML="";
 
-            state.records.push({
+    const records=getAllRecords();
 
-                type:"sports",
+    $("#recordCountText").textContent=
 
-                ...item
+        `총 ${records.length}건`;
 
-            });
+    records.forEach(record=>{
 
-        });
+        const athlete=
 
-        (appData.weightRecords||[]).forEach(item=>{
+            appData.athletes.find(
 
-            state.records.push({
+                a=>a.id===record.athleteId
 
-                type:"weight",
+            );
 
-                ...item
+        tbody.innerHTML+=`
 
-            });
+<tr>
 
-        });
+<td>${record.date}</td>
 
-        (appData.poseRecords||[]).forEach(item=>{
+<td>${athlete ? athlete.name : "-"}</td>
 
-            state.records.push({
+<td>${record.type}</td>
 
-                type:"pose",
+<td>${record.title}</td>
 
-                ...item
+<td>${record.score}</td>
 
-            });
+<td>-</td>
 
-        });
+</tr>
 
-    }
+`;
+
+    });
+
+}
+/* ==========================================
+   records.js Part 2
+   검색 / 필터
+========================================== */
+
+/* ---------- 검색 ---------- */
+
+function searchRecords(){
+
+    const athleteFilter =
+        $("#recordAthleteFilter").value;
+
+    const typeFilter =
+        $("#recordTypeFilter").value;
+
+    const keyword =
+        $("#recordSearchInput")
+        .value
+        .trim()
+        .toLowerCase();
+
+    const tbody = $("#recordsList");
+
+    if(!tbody) return;
+
+    tbody.innerHTML="";
+
+    let records = getAllRecords();
+
+    records = records.filter(record=>{
+
+        const athlete =
+            appData.athletes.find(
+                a=>a.id===record.athleteId
+            );
+
+        if(
+
+            athleteFilter &&
+
+            record.athleteId !== athleteFilter
+
+        ){
+
+            return false;
+
+        }
+
+        if(
+
+            typeFilter &&
+
+            record.type !== typeFilter
+
+        ){
+
+            return false;
+
+        }
+
+        if(keyword){
+
+            const athleteName =
+                athlete
+                ? athlete.name.toLowerCase()
+                : "";
+
+            const title =
+                String(record.title)
+                .toLowerCase();
+
+            if(
+
+                !athleteName.includes(keyword) &&
+
+                !title.includes(keyword)
+
+            ){
+
+                return false;
+
+            }
+
+        }
+
+        return true;
+
+    });
+
+    $("#recordCountText").textContent =
+        `총 ${records.length}건`;
+
+    records.forEach(record=>{
+
+        const athlete =
+            appData.athletes.find(
+                a=>a.id===record.athleteId
+            );
+
+        tbody.innerHTML += `
+
+<tr>
+
+<td>${record.date}</td>
+
+<td>${athlete ? athlete.name : "-"}</td>
+
+<td>${record.type}</td>
+
+<td>${record.title}</td>
+
+<td>${record.score}</td>
+
+<td>-</td>
+
+</tr>
+
+`;
+
+    });
 
 }
 
-/* ==========================================================
-   Athlete Filter
-========================================================== */
+/* ---------- 선수목록 ---------- */
 
-function renderAthleteFilter(){
+function updateRecordAthleteFilter(){
 
-    if(!DOM.athleteFilter) return;
+    const select =
+        $("#recordAthleteFilter");
 
-    DOM.athleteFilter.innerHTML=
+    if(!select) return;
 
-    `<option value="">전체 선수</option>`;
+    select.innerHTML =
 
-    if(!window.appData) return;
+`<option value="">전체 선수</option>`;
 
-    (appData.athletes||[]).forEach(player=>{
+    appData.athletes.forEach(athlete=>{
 
-        DOM.athleteFilter.innerHTML+=`
+        select.innerHTML += `
 
-<option value="${player.id}">
+<option value="${athlete.id}">
 
-${player.name}
+${athlete.name}
 
 </option>
 
@@ -124,444 +279,86 @@ ${player.name}
     });
 
 }
-/* ==========================================================
-   Search & Filter
-========================================================== */
+/* ==========================================
+   records.js Part 3
+   CSV / 초기화 / 이벤트
+========================================== */
 
-function getFilteredRecords(){
+/* ---------- CSV ---------- */
 
-    let records=[...state.records];
+function exportRecordCSV(){
 
-    if(state.athlete){
+    exportCSV(
 
-        records=records.filter(record=>
+        getAllRecords(),
 
-            String(record.athleteId)===String(state.athlete)
-
-        );
-
-    }
-
-    if(state.type){
-
-        records=records.filter(record=>
-
-            record.type===state.type
-
-        );
-
-    }
-
-    if(state.keyword){
-
-        const keyword=
-
-            state.keyword.toLowerCase();
-
-        records=records.filter(record=>{
-
-            return(
-
-                (record.memo||"")
-
-                .toLowerCase()
-
-                .includes(keyword)
-
-                ||
-
-                (record.trainingType||"")
-
-                .toLowerCase()
-
-                .includes(keyword)
-
-                ||
-
-                (record.exercise||"")
-
-                .toLowerCase()
-
-                .includes(keyword)
-
-                ||
-
-                (record.movement||"")
-
-                .toLowerCase()
-
-                .includes(keyword)
-
-            );
-
-        });
-
-    }
-
-    return records.sort(
-
-        (a,b)=>
-
-        new Date(b.date)-new Date(a.date)
+        "훈련기록"
 
     );
 
 }
 
-/* ==========================================================
-   Record Name
-========================================================== */
+/* ---------- 초기화 ---------- */
 
-function getRecordTitle(record){
+function resetRecordFilter(){
 
-    switch(record.type){
+    $("#recordAthleteFilter").value="";
 
-        case "sports":
+    $("#recordTypeFilter").value="";
 
-            return record.trainingType||
+    $("#recordSearchInput").value="";
 
-                   record.typeName||
-
-                   "-";
-
-        case "weight":
-
-            return record.exercise||
-
-                   "-";
-
-        case "pose":
-
-            return record.movement||
-
-                   "-";
-
-        default:
-
-            return "-";
-
-    }
+    renderRecordsPage();
 
 }
 
-/* ==========================================================
-   Score
-========================================================== */
+/* ---------- 이벤트 ---------- */
 
-function getRecordScore(record){
+function initializeRecordsModule(){
 
-    if(record.type==="sports"){
+    updateRecordAthleteFilter();
 
-        return record.score??"-";
+    renderRecordsPage();
 
-    }
-
-    if(record.type==="weight"){
-
-        return record.weight
-
-            ?`${record.weight}kg`
-
-            :"-";
-
-    }
-
-    if(record.type==="pose"){
-
-        return record.score
-
-            ?`${record.score}점`
-
-            :"-";
-
-    }
-
-    return "-";
-
-}
-
-/* ==========================================================
-   Render Table
-========================================================== */
-
-function renderRecords(){
-
-    if(!DOM.table){
-
-        return;
-
-    }
-
-    const records=
-
-        getFilteredRecords();
-
-    DOM.count.textContent=
-
-        `총 ${records.length}건`;
-
-    if(records.length===0){
-
-        DOM.table.innerHTML=`
-
-<tr>
-
-<td colspan="6">
-
-기록이 없습니다.
-
-</td>
-
-</tr>
-
-`;
-
-        return;
-
-    }
-
-    DOM.table.innerHTML=
-
-        records.map(record=>`
-
-<tr>
-
-<td>
-
-${record.date||"-"}
-
-</td>
-
-<td>
-
-${record.athleteName||"-"}
-
-</td>
-
-<td>
-
-${record.type}
-
-</td>
-
-<td>
-
-${getRecordTitle(record)}
-
-</td>
-
-<td>
-
-${getRecordScore(record)}
-
-</td>
-
-<td>
-
-<button
-
-class="record-delete"
-
-data-id="${record.id}"
-
-data-type="${record.type}"
-
->
-
-삭제
-
-</button>
-
-</td>
-
-</tr>
-
-`).join("");
-
-}
-/* ==========================================================
-   Delete Record
-========================================================== */
-
-function deleteRecord(type,id){
-
-    if(!confirm("이 기록을 삭제하시겠습니까?")){
-
-        return;
-
-    }
-
-    switch(type){
-
-        case "sports":
-
-            if(typeof window.deleteSportsRecord==="function"){
-
-                window.deleteSportsRecord(id);
-
-            }
-
-            break;
-
-        case "weight":
-
-            if(typeof window.deleteWeightRecord==="function"){
-
-                window.deleteWeightRecord(id);
-
-            }
-
-            break;
-
-        case "pose":
-
-            if(typeof window.deletePoseRecord==="function"){
-
-                window.deletePoseRecord(id);
-
-            }
-
-            break;
-
-    }
-
-    loadRecords();
-
-    renderRecords();
-
-}
-
-/* ==========================================================
-   CSV Export
-========================================================== */
-
-function exportCSV(){
-
-    const records=getFilteredRecords();
-
-    let csv="날짜,선수,유형,내용,점수\n";
-
-    records.forEach(record=>{
-
-        csv+=`"${record.date||""}","${record.athleteName||""}","${record.type}","${getRecordTitle(record)}","${getRecordScore(record)}"\n`;
-
-    });
-
-    const blob=new Blob(
-
-        [csv],
-
-        {
-
-            type:"text/csv;charset=utf-8"
-
-        }
-
-    );
-
-    const url=URL.createObjectURL(blob);
-
-    const a=document.createElement("a");
-
-    a.href=url;
-
-    a.download="training_records.csv";
-
-    a.click();
-
-    URL.revokeObjectURL(url);
-
-}
-
-/* ==========================================================
-   Event
-========================================================== */
-
-function bindEvents(){
-
-    DOM.searchButton?.addEventListener(
+    $("#searchRecordsButton")
+    ?.addEventListener(
 
         "click",
 
-        ()=>{
-
-            state.athlete=
-
-                DOM.athleteFilter.value;
-
-            state.type=
-
-                DOM.typeFilter.value;
-
-            state.keyword=
-
-                DOM.searchInput.value.trim();
-
-            renderRecords();
-
-        }
+        searchRecords
 
     );
 
-    DOM.resetButton?.addEventListener(
+    $("#resetRecordFilterButton")
+    ?.addEventListener(
 
         "click",
 
-        ()=>{
-
-            state.athlete="";
-
-            state.type="";
-
-            state.keyword="";
-
-            DOM.athleteFilter.value="";
-
-            DOM.typeFilter.value="";
-
-            DOM.searchInput.value="";
-
-            renderRecords();
-
-        }
+        resetRecordFilter
 
     );
 
-    DOM.exportButton?.addEventListener(
+    $("#exportRecordsButton")
+    ?.addEventListener(
 
         "click",
 
-        exportCSV
+        exportRecordCSV
 
     );
 
-    DOM.table?.addEventListener(
+    $("#recordSearchInput")
+    ?.addEventListener(
 
-        "click",
+        "keyup",
 
         event=>{
 
-            const button=
+            if(event.key==="Enter"){
 
-                event.target.closest(
-
-                    ".record-delete"
-
-                );
-
-            if(!button){
-
-                return;
+                searchRecords();
 
             }
-
-            deleteRecord(
-
-                button.dataset.type,
-
-                button.dataset.id
-
-            );
 
         }
 
@@ -569,62 +366,23 @@ function bindEvents(){
 
 }
 
-/* ==========================================================
-   Init
-========================================================== */
+/* ---------- Export ---------- */
 
-function init(){
+window.renderRecordsPage =
+    renderRecordsPage;
 
-    cacheDOM();
+window.initializeRecordsModule =
+    initializeRecordsModule;
 
-    loadRecords();
+window.searchRecords =
+    searchRecords;
 
-    renderAthleteFilter();
-
-    renderRecords();
-
-    bindEvents();
-
-}
-
-/* ==========================================================
-   Public
-========================================================== */
-
-return{
-
-    init,
-
-    refresh(){
-
-        loadRecords();
-
-        renderAthleteFilter();
-
-        renderRecords();
-
-    },
-
-    exportCSV
-
-};
-
-})();
-
-/* ==========================================================
-   Start
-========================================================== */
+/* ---------- 시작 ---------- */
 
 document.addEventListener(
 
     "DOMContentLoaded",
 
-    ()=>{
-
-        RecordsModule.init();
-
-    }
+    initializeRecordsModule
 
 );
-
-window.RecordsModule=RecordsModule;
